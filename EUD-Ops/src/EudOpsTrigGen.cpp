@@ -91,7 +91,7 @@ bool EudOpsTrigGen::setToConstant(u32 constant)
 {
     u32 address = targetAddress.address;
     u32 bitLength = targetAddress.bitLength;
-    u32 bitsBeforeAddress = 8 * (address % 4);
+    u32 bitsBeforeAddress = 8 * (3-address % 4);
     u32 bitsAfterAddress = 32 - bitsBeforeAddress - bitLength;
     DeathCounter slackSpace = genData.getSlackSpace();
     u32 bit = 0;
@@ -133,7 +133,7 @@ bool EudOpsTrigGen::setToDeaths(DeathCounter srcValue)
 {
     u32 address = targetAddress.address;
     u32 bitLength = targetAddress.bitLength;
-    u32 bitsBeforeAddress = 8 * (address % 4);
+    u32 bitsBeforeAddress = 8 * (3-address % 4);
     u32 bitsAfterAddress = 32 - bitsBeforeAddress - bitLength;
     DeathCounter slackSpace = genData.getSlackSpace();
     u32 bit = 0;
@@ -203,7 +203,7 @@ bool EudOpsTrigGen::checkEqual(u32 constant)
 {
     u32 address = targetAddress.address;
     u32 bitLength = targetAddress.bitLength;
-    u32 bitsBeforeAddress = 8 * (address % 4);
+    u32 bitsBeforeAddress = 8 * (3-address % 4);
     u32 bitsAfterAddress = 32 - bitsBeforeAddress - bitLength;
     DeathCounter slackSpace = genData.getSlackSpace();
     u32 bit = 0;
@@ -237,7 +237,7 @@ bool EudOpsTrigGen::checkAtLeast(u32 constant)
 {
     u32 address = targetAddress.address;
     u32 bitLength = targetAddress.bitLength;
-    u32 bitsBeforeAddress = 8 * (address % 4);
+    u32 bitsBeforeAddress = 8 * (3-address % 4);
     u32 bitsAfterAddress = 32 - bitsBeforeAddress - bitLength;
     DeathCounter slackSpace = genData.getSlackSpace();
     u32 bit = 0;
@@ -266,7 +266,7 @@ bool EudOpsTrigGen::checkAtMost(u32 constant)
 {
     u32 address = targetAddress.address;
     u32 bitLength = targetAddress.bitLength;
-    u32 bitsBeforeAddress = 8 * (address % 4);
+    u32 bitsBeforeAddress = 8 * (3-address % 4);
     u32 bitsAfterAddress = 32 - bitsBeforeAddress - bitLength;
     DeathCounter slackSpace = genData.getSlackSpace();
     u32 bit = 0;
@@ -295,7 +295,7 @@ bool EudOpsTrigGen::checkGreaterThan(u32 constant)
 {
     u32 address = targetAddress.address;
     u32 bitLength = targetAddress.bitLength;
-    u32 bitsBeforeAddress = 8 * (address % 4);
+    u32 bitsBeforeAddress = 8 * (3-address % 4);
     u32 bitsAfterAddress = 32 - bitsBeforeAddress - bitLength;
     DeathCounter slackSpace = genData.getSlackSpace();
     u32 bit = 0;
@@ -324,7 +324,7 @@ bool EudOpsTrigGen::checkLessThan(u32 constant)
 {
     u32 address = targetAddress.address;
     u32 bitLength = targetAddress.bitLength;
-    u32 bitsBeforeAddress = 8 * (address % 4);
+    u32 bitsBeforeAddress = 8 * (3-address % 4);
     u32 bitsAfterAddress = 32 - bitsBeforeAddress - bitLength;
     DeathCounter slackSpace = genData.getSlackSpace();
     u32 bit = 0;
