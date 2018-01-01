@@ -215,9 +215,13 @@ bool EudOpsTrigGen::checkEqual(u32 constant)
     u32 valueMax = ((constant+1) << bitsAfterAddress)-1;
 
     trigger(owners);
-    deaths(targetAddress.playerId, targetAddress.unitId, NumericComparison::AtLeast, valueMin);
-    if ( valueMin != valueMax )
+    if ( valueMin == valueMax )
+        deaths(targetAddress.playerId, targetAddress.unitId, NumericComparison::Exactly, valueMin);
+    else
+    {
+        deaths(targetAddress.playerId, targetAddress.unitId, NumericComparison::AtLeast, valueMin);
         deaths(targetAddress.playerId, targetAddress.unitId, NumericComparison::AtMost, valueMax);
+    }
 
     setSwitch(0, SwitchModifier::Set);
     
