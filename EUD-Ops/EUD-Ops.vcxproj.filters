@@ -1,0 +1,436 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\Common Files">
+      <UniqueIdentifier>{92e32526-543a-4108-9be1-4423809a03fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Windows UI">
+      <UniqueIdentifier>{b8ede507-53a2-4749-b75e-8e42ee5146fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Common Files">
+      <UniqueIdentifier>{d1de73fc-3955-41bf-ab22-38731aba6f28}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Windows UI">
+      <UniqueIdentifier>{3a290c34-d56f-4cbf-9584-4f0c7a9350fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Mapping Core">
+      <UniqueIdentifier>{59bf0760-5448-4b2c-9473-298a8873eb75}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Mappung Core">
+      <UniqueIdentifier>{0743f15b-f309-4861-bd03-0b70cd166e46}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\CommonFiles\CommonFiles.h">
+      <Filter>Header Files\Common Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CommonFiles\Constants.h">
+      <Filter>Header Files\Common Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CommonFiles\Debug.h">
+      <Filter>Header Files\Common Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CommonFiles\Resource.h">
+      <Filter>Header Files\Common Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CommonFiles\Structs.h">
+      <Filter>Header Files\Common Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CommonFiles\Version.h">
+      <Filter>Header Files\Common Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\ButtonControl.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\CheckBoxControl.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\ClassDialog.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\ClassWindow.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\DataTypes.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\DragListControl.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\DropdownControl.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\EditControl.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\GridItem.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\GridView.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\GroupBoxControl.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\ListBoxControl.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\ListViewControl.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\MdiClient.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\PaintBuffer.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\RadioButtonControl.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\StatusControl.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\TabControl.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\TextControl.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\ToolbarControl.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\TreeViewControl.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\WindowControl.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\WindowMenu.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\WindowsItem.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\WindowsUI.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WindowsUI\WinUIEnums.h">
+      <Filter>Header Files\Windows UI</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AddressInput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MainPlot.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PlayerDropdown.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ScopeInput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\TriggerOutput.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\EudOpsDef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\EudOpsTrigGen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\EudOps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DeathCounter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\EudAddress.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GenerationData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\TextTrigGenerator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\Basics.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\Buffer.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\ChkAction.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\ChkCondition.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\ChkCuwp.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\ChkDoodad.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\ChkLocation.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\ChkSprite.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\ChkTrigger.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\ChkUnit.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\CoreStructs.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\DefaultCHK.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\EscapeStrings.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\FileIO.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\MapFile.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\MappingCore.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\Math.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\ModifiedAsset.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\Scenario.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\sha256.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\StringTableNode.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\StringUsage.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\SubStringMap.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MappingCore\TemporaryFile.h">
+      <Filter>Header Files\Mapping Core</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\CommonFiles\Constants.cpp">
+      <Filter>Source Files\Common Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CommonFiles\Debug.cpp">
+      <Filter>Source Files\Common Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CommonFiles\Structs.cpp">
+      <Filter>Source Files\Common Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CommonFiles\Version.cpp">
+      <Filter>Source Files\Common Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\WindowsItem.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\WindowMenu.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\WindowControl.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\TreeViewControl.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\ToolbarControl.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\TextControl.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\TabControl.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\StatusControl.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\RadioButtonControl.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\PaintBuffer.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\MdiClient.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\ListViewControl.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\ListBoxControl.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\GroupBoxControl.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\GridView.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\GridItem.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\EditControl.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\DropdownControl.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\DragListControl.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\ClassWindow.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\ClassDialog.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\CheckBoxControl.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WindowsUI\ButtonControl.cpp">
+      <Filter>Source Files\Windows UI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AddressInput.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MainPlot.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PlayerDropdown.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ScopeInput.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TriggerOutput.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\EudOpsDef.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\EudOpsTrigGen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\EudOps.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GenerationData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\EudAddress.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TextTrigGenerator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappingCore\Basics.cpp">
+      <Filter>Source Files\Mappung Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappingCore\Buffer.cpp">
+      <Filter>Source Files\Mappung Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappingCore\ChkAction.cpp">
+      <Filter>Source Files\Mappung Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappingCore\ChkCondition.cpp">
+      <Filter>Source Files\Mappung Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappingCore\ChkCuwp.cpp">
+      <Filter>Source Files\Mappung Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappingCore\ChkDoodad.cpp">
+      <Filter>Source Files\Mappung Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappingCore\ChkLocation.cpp">
+      <Filter>Source Files\Mappung Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappingCore\ChkSprite.cpp">
+      <Filter>Source Files\Mappung Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappingCore\ChkTrigger.cpp">
+      <Filter>Source Files\Mappung Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappingCore\ChkUnit.cpp">
+      <Filter>Source Files\Mappung Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappingCore\DefaultCHK.cpp">
+      <Filter>Source Files\Mappung Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappingCore\EscapeStrings.cpp">
+      <Filter>Source Files\Mappung Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappingCore\FileIO.cpp">
+      <Filter>Source Files\Mappung Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappingCore\MapFile.cpp">
+      <Filter>Source Files\Mappung Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappingCore\Math.cpp">
+      <Filter>Source Files\Mappung Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappingCore\ModifiedAsset.cpp">
+      <Filter>Source Files\Mappung Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappingCore\Scenario.cpp">
+      <Filter>Source Files\Mappung Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappingCore\sha256.cpp">
+      <Filter>Source Files\Mappung Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappingCore\StringTableNode.cpp">
+      <Filter>Source Files\Mappung Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappingCore\StringUsage.cpp">
+      <Filter>Source Files\Mappung Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappingCore\SubStringMap.cpp">
+      <Filter>Source Files\Mappung Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MappingCore\TemporaryFile.cpp">
+      <Filter>Source Files\Mappung Core</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Icon.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+</Project>
