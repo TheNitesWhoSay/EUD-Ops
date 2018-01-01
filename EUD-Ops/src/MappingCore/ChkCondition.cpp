@@ -1,16 +1,16 @@
 #include "ChkCondition.h"
 
-Condition::Condition()
+Condition::Condition() : locationNum(0), players(0), amount(0), unitID(0), comparison(0), condition(0), typeIndex(0), flags(0), internalData(0)
 {
 
 }
 
-Condition::Condition(u8 condition) : condition(condition)
+Condition::Condition(u8 condition) : locationNum(0), players(0), amount(0), unitID(0), comparison(0), condition(condition), typeIndex(0), flags(0), internalData(0)
 {
 
 }
 
-Condition::Condition(ConditionId condition) : condition((u8)condition)
+Condition::Condition(ConditionId condition) : locationNum(0), players(0), amount(0), unitID(0), comparison(0), condition((u8)condition), typeIndex(0), flags(0), internalData(0)
 {
 
 }
