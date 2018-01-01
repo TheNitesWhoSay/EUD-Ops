@@ -17,6 +17,7 @@ class Trigger // A trigger as found in a scenario.chk's TRIG and MBRF sections
             #define EXECUTED_BY_PLAYER     1
             #define NOT_EXECUTED_BY_PLAYER 0
 
+        Trigger();
         Condition& condition(u8 index);
         Action& action(u8 index);
 

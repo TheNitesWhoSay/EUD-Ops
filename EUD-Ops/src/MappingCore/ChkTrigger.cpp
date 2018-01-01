@@ -3,6 +3,11 @@
 Condition Trigger::junkCondition;
 Action Trigger::junkAction;
 
+Trigger::Trigger() : internalData(0)
+{
+    memset(players, 0, NUM_TRIG_PLAYERS);
+}
+
 Condition& Trigger::condition(u8 index)
 {
     if ( index < NUM_TRIG_CONDITIONS )
