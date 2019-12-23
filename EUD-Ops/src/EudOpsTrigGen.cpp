@@ -3,6 +3,14 @@
 #include <cstdarg>
 #include <cmath>
 
+/**
+    0xAABBCCDD in little endian: | DD | CC | BB | AA | ( | byte 0 | byte 1 | byte 2 | byte 3 | )
+    Byte 0 mask: 0x000000FF blocked by 0xFFFFFF00
+    Byte 1 mask: 0x0000FF00 blocked by 0xFFFF0000
+    Byte 2 mask: 0x00FF0000 blocked by 0xFF000000
+    Byte 3 mask: 0xFF000000 is not blocked
+*/
+
 bool EudOpsTrigGen::GenerateNoArg(std::string &output, GenerationData genData, EudOpDef def, EudAddress eudAddress)
 {
     output = "Generate case for " + def.eudOpName + " not found!";
@@ -18,6 +26,9 @@ bool EudOpsTrigGen::GenerateWithConstant(std::string &output, GenerationData gen
     {
     case EudOp::SetToConstant:
         success = eudOpsGen.setToConstant(constant);
+        break;
+    case EudOp::AddConstant:
+        success = eudOpsGen.addConstant(constant);
         break;
     case EudOp::CheckEqual:
         success = eudOpsGen.checkEqual(constant);
@@ -61,15 +72,15 @@ bool EudOpsTrigGen::GenerateWithDeathCounter(std::string &output, GenerationData
     bool success = false;
     switch (def.eudOp)
     {
-    case EudOp::SetToDeaths:
-        success = eudOpsGen.setToDeaths(deathCounter);
-        break;
-    case EudOp::CopyToDeaths:
-        success = eudOpsGen.copyToDeaths(deathCounter);
-        break;
-    default:
-        caseNotFound = true;
-        break;
+        case EudOp::SetToDeaths:
+            success = eudOpsGen.setToDeaths(deathCounter);
+            break;
+        case EudOp::CopyToDeaths:
+            success = eudOpsGen.copyToDeaths(deathCounter);
+            break;
+        default:
+            caseNotFound = true;
+            break;
     }
 
     if (caseNotFound)
@@ -91,42 +102,110 @@ bool EudOpsTrigGen::setToConstant(u32 constant)
 {
     u32 address = targetAddress.address;
     u32 bitLength = targetAddress.bitLength;
+    u32 bitsBlocking = 0;
     u32 bitsBeforeAddress = 8 * (address % 4 == 0 ? 0 : 3-address % 4);
     u32 bitsAfterAddress = 32 - bitsBeforeAddress - bitLength;
-    DeathCounter slackSpace = genData.getSlackSpace();
+    DeathCounter strippedBits = genData.getSlackSpaceDc();
     u32 bit = 0;
     
     for (; bit < bitsBeforeAddress; bit++)
-        stripBit(slackSpace, bit, true);
+        stripBit(strippedBits, bit, true);
     if (bitsAfterAddress > 0)
     {
         u32 bitsBeforeRemainder = bit + bitLength;
         for (; bit < bitsBeforeRemainder; bit++)
-            stripBit(slackSpace, bit, false);
+            stripBit(strippedBits, bit, false);
         u32 valueToAdd = constant << bitsAfterAddress;
         if (valueToAdd != 0)
         {
             trigger(owners);
             always();
-            setDeaths(targetAddress.playerId, targetAddress.unitId, NumericModifier::Add, valueToAdd);
+            setDeaths(targetAddress, NumericModifier::Add, valueToAdd);
         }
     }
     else // bitsAfterAddress == 0
     {
         trigger(owners);
         always();
-        setDeaths(targetAddress.playerId, targetAddress.unitId, NumericModifier::SetTo, constant);
+        setDeaths(targetAddress, NumericModifier::SetTo, constant);
     }
     while (!restoreActions.empty())
     {
         RestoreAction action = restoreActions.top();
         restoreActions.pop();
         trigger(owners);
-        deaths(slackSpace.playerId, slackSpace.unitId, NumericComparison::AtLeast, action.modification);
-        setDeaths(slackSpace.playerId, slackSpace.unitId, NumericModifier::Subtract, action.modification);
-        setDeaths(targetAddress.playerId, targetAddress.unitId, NumericModifier::Add, action.modification);
+        deaths(strippedBits, NumericComparison::AtLeast, action.modification);
+        setDeaths(strippedBits, NumericModifier::Subtract, action.modification);
+        setDeaths(strippedBits, NumericModifier::Add, action.modification);
     }
     return true;
+}
+
+bool EudOpsTrigGen::addConstant(u32 constant)
+{
+
+    /**
+    0xAABBCCDD in little endian: | DD | CC | BB | AA | ( | byte 0 | byte 1 | byte 2 | byte 3 | )
+    Byte 0 mask: 0x000000FF blocked by 0xFFFFFF00
+    Byte 1 mask: 0x0000FF00 blocked by 0xFFFF0000
+    Byte 2 mask: 0x00FF0000 blocked by 0xFF000000
+    Byte 3 mask: 0xFF000000 is not blocked
+    */
+    u32 address = targetAddress.address;
+    u32 bitLength = targetAddress.bitLength;
+    u32 bitsBeforeAddress = 8 * (address % 4 == 0 ? 0 : 3-address % 4);
+    u32 bitsAfterAddress = 32 - bitsBeforeAddress - bitLength;
+    u32 stripFirst = genData.getSlackSpaceSwitchNum();
+    DeathCounter strippedBits = genData.getSlackSpaceDc();
+    u32 bit = 0;
+    std::cout << "bitsBefore: " + bitsBeforeAddress << std::endl;
+    std::cout << "bits";
+
+    for (; bit < bitsBeforeAddress; bit++)
+        stripBit(strippedBits, bit, true);
+    if (bitsAfterAddress > 0)
+    {
+        u32 bitsBeforeRemainder = bit + bitLength;
+        u32 overflowBoundsCheck = (2 << (bitLength-1)) - constant;
+        trigger(owners);
+        memory(targetAddress, NumericComparison::AtLeast, overflowBoundsCheck << bitsAfterAddress);
+        setSwitch(stripFirst, SwitchModifier::Set);
+        trigger(owners);
+        memory(targetAddress, NumericComparison::AtMost, ((overflowBoundsCheck+1) << bitsAfterAddress)-1);
+        for (; bit < bitsBeforeRemainder; bit++)
+        {
+            u32 unshiftedValue = pow(2, bitLength-bit-1);
+            u32 shiftedValue = unshiftedValue << bitsAfterAddress;
+        }
+        u32 valueToAdd = constant << bitsAfterAddress;
+        if (valueToAdd != 0)
+        {
+            trigger(owners);
+            always();
+            setDeaths(targetAddress, NumericModifier::Add, valueToAdd);
+        }
+    }
+    else // bitsAfterAddress == 0
+    {
+        trigger(owners);
+        always();
+        setDeaths(targetAddress, NumericModifier::SetTo, constant);
+    }
+    while (!restoreActions.empty())
+    {
+        RestoreAction action = restoreActions.top();
+        restoreActions.pop();
+        trigger(owners);
+        deaths(strippedBits, NumericComparison::AtLeast, action.modification);
+        setDeaths(strippedBits, NumericModifier::Subtract, action.modification);
+        setDeaths(strippedBits, NumericModifier::Add, action.modification);
+    }
+    return true;
+}
+
+bool EudOpsTrigGen::subtractConstant(u32 constant)
+{
+    return false;
 }
 
 bool EudOpsTrigGen::setToDeaths(DeathCounter srcValue)
@@ -135,33 +214,43 @@ bool EudOpsTrigGen::setToDeaths(DeathCounter srcValue)
     u32 bitLength = targetAddress.bitLength;
     u32 bitsBeforeAddress = 8 * (address % 4 == 0 ? 0 : 3-address % 4);
     u32 bitsAfterAddress = 32 - bitsBeforeAddress - bitLength;
-    DeathCounter slackSpace = genData.getSlackSpace();
+    DeathCounter strippedBits = genData.getSlackSpaceDc();
     u32 bit = 0;
 
     for (; bit < bitsBeforeAddress; bit++)
-        stripBit(slackSpace, bit, true);
+        stripBit(strippedBits, bit, true);
     u32 bitsBeforeRemainder = bit + bitLength;
     for (; bit < bitLength; bit++)
-        stripBit(slackSpace, bit, false);
+        stripBit(strippedBits, bit, false);
     for (bit = 0; bit < bitLength; bit++)
     {
         trigger(owners);
         u32 unshiftedValue = pow(2, bitLength-bit-1);
         u32 shiftedValue = unshiftedValue << bitsAfterAddress;
-        deaths(srcValue.playerId, srcValue.unitId, NumericComparison::AtLeast, unshiftedValue);
-        setDeaths(srcValue.playerId, srcValue.unitId, NumericModifier::Subtract, unshiftedValue);
-        setDeaths(targetAddress.playerId, targetAddress.unitId, NumericModifier::Add, shiftedValue);
+        deaths(srcValue, NumericComparison::AtLeast, unshiftedValue);
+        setDeaths(srcValue, NumericModifier::Subtract, unshiftedValue);
+        setDeaths(targetAddress, NumericModifier::Add, shiftedValue);
     }
     while (!restoreActions.empty())
     {
         RestoreAction action = restoreActions.top();
         restoreActions.pop();
         trigger(owners);
-        deaths(slackSpace.playerId, slackSpace.unitId, NumericComparison::AtLeast, action.modification);
-        setDeaths(slackSpace.playerId, slackSpace.unitId, NumericModifier::Subtract, action.modification);
-        setDeaths(targetAddress.playerId, targetAddress.unitId, NumericModifier::Add, action.modification);
+        deaths(strippedBits, NumericComparison::AtLeast, action.modification);
+        setDeaths(strippedBits, NumericModifier::Subtract, action.modification);
+        setDeaths(targetAddress, NumericModifier::Add, action.modification);
     }
     return true;
+}
+
+bool EudOpsTrigGen::addDeaths(DeathCounter addition)
+{
+    return false;
+}
+
+bool EudOpsTrigGen::subtractDeaths(DeathCounter subtraction)
+{
+    return false;
 }
 
 bool EudOpsTrigGen::copyToDeaths(DeathCounter destValue)
@@ -170,31 +259,31 @@ bool EudOpsTrigGen::copyToDeaths(DeathCounter destValue)
     u32 bitLength = targetAddress.bitLength;
     u32 bitsBeforeAddress = 8 * (address % 4 == 0 ? 0 : 3-address % 4);
     u32 bitsAfterAddress = 32 - bitsBeforeAddress - bitLength;
-    DeathCounter slackSpace = genData.getSlackSpace();
+    DeathCounter strippedBits = genData.getSlackSpaceDc();
     u32 bit = 0;
 
     for (; bit < bitsBeforeAddress; bit++)
-        stripBit(slackSpace, bit, true);
+        stripBit(strippedBits, bit, true);
     u32 bitsBeforeRemainder = bit + bitLength;
     for (; bit < bitLength; bit++)
-        stripBit(slackSpace, bit, false);
+        stripBit(strippedBits, bit, false);
     for (bit = 0; bit < bitLength; bit++)
     {
         trigger(owners);
         u32 unshiftedValue = pow(2, bitLength-bit-1);
         u32 shiftedValue = unshiftedValue << bitsAfterAddress;
-        deaths(targetAddress.playerId, targetAddress.unitId, NumericComparison::AtLeast, shiftedValue);
-        setDeaths(targetAddress.playerId, targetAddress.unitId, NumericModifier::Subtract, shiftedValue);
-        setDeaths(destValue.playerId, destValue.unitId, NumericModifier::Add, shiftedValue);
+        deaths(targetAddress, NumericComparison::AtLeast, shiftedValue);
+        setDeaths(targetAddress, NumericModifier::Subtract, shiftedValue);
+        setDeaths(destValue, NumericModifier::Add, shiftedValue);
     }
     while (!restoreActions.empty())
     {
         RestoreAction action = restoreActions.top();
         restoreActions.pop();
         trigger(owners);
-        deaths(slackSpace.playerId, slackSpace.unitId, NumericComparison::AtLeast, action.modification);
-        setDeaths(slackSpace.playerId, slackSpace.unitId, NumericModifier::Subtract, action.modification);
-        setDeaths(targetAddress.playerId, targetAddress.unitId, NumericModifier::Add, action.modification);
+        deaths(strippedBits, NumericComparison::AtLeast, action.modification);
+        setDeaths(strippedBits, NumericModifier::Subtract, action.modification);
+        setDeaths(targetAddress, NumericModifier::Add, action.modification);
     }
     return true;
 }
@@ -205,22 +294,22 @@ bool EudOpsTrigGen::checkEqual(u32 constant)
     u32 bitLength = targetAddress.bitLength;
     u32 bitsBeforeAddress = 8 * (address % 4 == 0 ? 0 : 3-address % 4);
     u32 bitsAfterAddress = 32 - bitsBeforeAddress - bitLength;
-    DeathCounter slackSpace = genData.getSlackSpace();
+    DeathCounter strippedBits = genData.getSlackSpaceDc();
     u32 bit = 0;
 
     for (; bit < bitsBeforeAddress; bit++)
-        stripBit(slackSpace, bit, true);
+        stripBit(strippedBits, bit, true);
 
     u32 valueMin = constant << bitsAfterAddress;
     u32 valueMax = ((constant+1) << bitsAfterAddress)-1;
 
     trigger(owners);
     if ( valueMin == valueMax )
-        deaths(targetAddress.playerId, targetAddress.unitId, NumericComparison::Exactly, valueMin);
+        deaths(targetAddress, NumericComparison::Exactly, valueMin);
     else
     {
-        deaths(targetAddress.playerId, targetAddress.unitId, NumericComparison::AtLeast, valueMin);
-        deaths(targetAddress.playerId, targetAddress.unitId, NumericComparison::AtMost, valueMax);
+        deaths(targetAddress, NumericComparison::AtLeast, valueMin);
+        deaths(targetAddress, NumericComparison::AtMost, valueMax);
     }
 
     setSwitch(0, SwitchModifier::Set);
@@ -230,9 +319,9 @@ bool EudOpsTrigGen::checkEqual(u32 constant)
         RestoreAction action = restoreActions.top();
         restoreActions.pop();
         trigger(owners);
-        deaths(slackSpace.playerId, slackSpace.unitId, NumericComparison::AtLeast, action.modification);
-        setDeaths(slackSpace.playerId, slackSpace.unitId, NumericModifier::Subtract, action.modification);
-        setDeaths(targetAddress.playerId, targetAddress.unitId, NumericModifier::Add, action.modification);
+        deaths(strippedBits, NumericComparison::AtLeast, action.modification);
+        setDeaths(strippedBits, NumericModifier::Subtract, action.modification);
+        setDeaths(targetAddress, NumericModifier::Add, action.modification);
     }
     return true;
 }
@@ -243,15 +332,15 @@ bool EudOpsTrigGen::checkAtLeast(u32 constant)
     u32 bitLength = targetAddress.bitLength;
     u32 bitsBeforeAddress = 8 * (address % 4 == 0 ? 0 : 3-address % 4);
     u32 bitsAfterAddress = 32 - bitsBeforeAddress - bitLength;
-    DeathCounter slackSpace = genData.getSlackSpace();
+    DeathCounter strippedBits = genData.getSlackSpaceDc();
     u32 bit = 0;
 
     for (; bit < bitsBeforeAddress; bit++)
-        stripBit(slackSpace, bit, true);
+        stripBit(strippedBits, bit, true);
 
     u32 valueMin = constant << bitsAfterAddress;
     trigger(owners);
-    deaths(targetAddress.playerId, targetAddress.unitId, NumericComparison::AtLeast, valueMin);
+    deaths(targetAddress, NumericComparison::AtLeast, valueMin);
     setSwitch(0, SwitchModifier::Set);
 
     while (!restoreActions.empty())
@@ -259,9 +348,9 @@ bool EudOpsTrigGen::checkAtLeast(u32 constant)
         RestoreAction action = restoreActions.top();
         restoreActions.pop();
         trigger(owners);
-        deaths(slackSpace.playerId, slackSpace.unitId, NumericComparison::AtLeast, action.modification);
-        setDeaths(slackSpace.playerId, slackSpace.unitId, NumericModifier::Subtract, action.modification);
-        setDeaths(targetAddress.playerId, targetAddress.unitId, NumericModifier::Add, action.modification);
+        deaths(strippedBits, NumericComparison::AtLeast, action.modification);
+        setDeaths(strippedBits, NumericModifier::Subtract, action.modification);
+        setDeaths(targetAddress, NumericModifier::Add, action.modification);
     }
     return true;
 }
@@ -272,15 +361,15 @@ bool EudOpsTrigGen::checkAtMost(u32 constant)
     u32 bitLength = targetAddress.bitLength;
     u32 bitsBeforeAddress = 8 * (address % 4 == 0 ? 0 : 3-address % 4);
     u32 bitsAfterAddress = 32 - bitsBeforeAddress - bitLength;
-    DeathCounter slackSpace = genData.getSlackSpace();
+    DeathCounter strippedBits = genData.getSlackSpaceDc();
     u32 bit = 0;
 
     for (; bit < bitsBeforeAddress; bit++)
-        stripBit(slackSpace, bit, true);
+        stripBit(strippedBits, bit, true);
 
     u32 valueMax = ((constant+1) << bitsAfterAddress)-1;
     trigger(owners);
-    deaths(targetAddress.playerId, targetAddress.unitId, NumericComparison::AtMost, valueMax);
+    deaths(targetAddress, NumericComparison::AtMost, valueMax);
     setSwitch(0, SwitchModifier::Set);
 
     while (!restoreActions.empty())
@@ -288,9 +377,9 @@ bool EudOpsTrigGen::checkAtMost(u32 constant)
         RestoreAction action = restoreActions.top();
         restoreActions.pop();
         trigger(owners);
-        deaths(slackSpace.playerId, slackSpace.unitId, NumericComparison::AtLeast, action.modification);
-        setDeaths(slackSpace.playerId, slackSpace.unitId, NumericModifier::Subtract, action.modification);
-        setDeaths(targetAddress.playerId, targetAddress.unitId, NumericModifier::Add, action.modification);
+        deaths(strippedBits, NumericComparison::AtLeast, action.modification);
+        setDeaths(strippedBits, NumericModifier::Subtract, action.modification);
+        setDeaths(targetAddress, NumericModifier::Add, action.modification);
     }
     return true;
 }
@@ -301,15 +390,15 @@ bool EudOpsTrigGen::checkGreaterThan(u32 constant)
     u32 bitLength = targetAddress.bitLength;
     u32 bitsBeforeAddress = 8 * (address % 4 == 0 ? 0 : 3-address % 4);
     u32 bitsAfterAddress = 32 - bitsBeforeAddress - bitLength;
-    DeathCounter slackSpace = genData.getSlackSpace();
+    DeathCounter strippedBits = genData.getSlackSpaceDc();
     u32 bit = 0;
 
     for (; bit < bitsBeforeAddress; bit++)
-        stripBit(slackSpace, bit, true);
+        stripBit(strippedBits, bit, true);
 
     u32 valueMin = (constant+1) << bitsAfterAddress;
     trigger(owners);
-    deaths(targetAddress.playerId, targetAddress.unitId, NumericComparison::AtLeast, valueMin);
+    deaths(targetAddress, NumericComparison::AtLeast, valueMin);
     setSwitch(0, SwitchModifier::Set);
 
     while (!restoreActions.empty())
@@ -317,9 +406,9 @@ bool EudOpsTrigGen::checkGreaterThan(u32 constant)
         RestoreAction action = restoreActions.top();
         restoreActions.pop();
         trigger(owners);
-        deaths(slackSpace.playerId, slackSpace.unitId, NumericComparison::AtLeast, action.modification);
-        setDeaths(slackSpace.playerId, slackSpace.unitId, NumericModifier::Subtract, action.modification);
-        setDeaths(targetAddress.playerId, targetAddress.unitId, NumericModifier::Add, action.modification);
+        deaths(strippedBits, NumericComparison::AtLeast, action.modification);
+        setDeaths(strippedBits, NumericModifier::Subtract, action.modification);
+        setDeaths(targetAddress, NumericModifier::Add, action.modification);
     }
     return true;
 }
@@ -330,15 +419,15 @@ bool EudOpsTrigGen::checkLessThan(u32 constant)
     u32 bitLength = targetAddress.bitLength;
     u32 bitsBeforeAddress = 8 * (address % 4 == 0 ? 0 : 3-address % 4);
     u32 bitsAfterAddress = 32 - bitsBeforeAddress - bitLength;
-    DeathCounter slackSpace = genData.getSlackSpace();
+    DeathCounter strippedBits = genData.getSlackSpaceDc();
     u32 bit = 0;
 
     for (; bit < bitsBeforeAddress; bit++)
-        stripBit(slackSpace, bit, true);
+        stripBit(strippedBits, bit, true);
 
     u32 valueMax = (constant << bitsAfterAddress)-1;
     trigger(owners);
-    deaths(targetAddress.playerId, targetAddress.unitId, NumericComparison::AtMost, valueMax);
+    deaths(targetAddress, NumericComparison::AtMost, valueMax);
     setSwitch(0, SwitchModifier::Set);
 
     while (!restoreActions.empty())
@@ -346,9 +435,9 @@ bool EudOpsTrigGen::checkLessThan(u32 constant)
         RestoreAction action = restoreActions.top();
         restoreActions.pop();
         trigger(owners);
-        deaths(slackSpace.playerId, slackSpace.unitId, NumericComparison::AtLeast, action.modification);
-        setDeaths(slackSpace.playerId, slackSpace.unitId, NumericModifier::Subtract, action.modification);
-        setDeaths(targetAddress.playerId, targetAddress.unitId, NumericModifier::Add, action.modification);
+        deaths(strippedBits, NumericComparison::AtLeast, action.modification);
+        setDeaths(strippedBits, NumericModifier::Subtract, action.modification);
+        setDeaths(targetAddress, NumericModifier::Add, action.modification);
     }
     return true;
 }
@@ -357,11 +446,11 @@ void EudOpsTrigGen::stripBit(DeathCounter slackSpace, u32 bit, bool restore)
 {
     s64 change = pow(2, (31 - bit));
     trigger(owners);
-    deaths(targetAddress.playerId, targetAddress.unitId, NumericComparison::AtLeast, change);
-    setDeaths(targetAddress.playerId, targetAddress.unitId, NumericModifier::Subtract, change);
+    deaths(targetAddress, NumericComparison::AtLeast, change);
+    setDeaths(targetAddress, NumericModifier::Subtract, change);
     if (restore)
     {
-        setDeaths(slackSpace.playerId, slackSpace.unitId, NumericModifier::Add, change);
+        setDeaths(slackSpace, NumericModifier::Add, change);
         restoreActions.push(RestoreAction(slackSpace, change));
     }
 }
@@ -405,7 +494,22 @@ bool EudOpsTrigGen::deaths(u32 playerId, u32 unitId, NumericComparison numericCo
     condition.comparison = (u8)numericComparison;
     condition.amount = amount;
     return currTrig.addCondition(condition);
-    //out << "	Deaths(\"" << player << "\", \"" << unit << "\", " << mod << ", " << amount << ");" << endl;
+}
+bool EudOpsTrigGen::deaths(DeathCounter deathCounter, NumericComparison numericComparison, u32 amount) {
+    Condition condition(ConditionId::Deaths);
+    condition.players = deathCounter.playerId;
+    condition.unitID = deathCounter.unitId;
+    condition.comparison = (u8)numericComparison;
+    condition.amount = amount;
+    return currTrig.addCondition(condition);
+}
+bool EudOpsTrigGen::deaths(EudAddress eudAddress, NumericComparison numericComparison, u32 amount) {
+    Condition condition(ConditionId::Deaths);
+    condition.players = eudAddress.playerId;
+    condition.unitID = eudAddress.unitId;
+    condition.comparison = (u8)numericComparison;
+    condition.amount = amount;
+    return currTrig.addCondition(condition);
 }
 // Elapsed Time
 // Highest Score
@@ -421,7 +525,22 @@ bool EudOpsTrigGen::memory(u32 address, NumericComparison numericComparison, u32
     condition.comparison = (u8)numericComparison;
     condition.amount = value;
     return currTrig.addCondition(condition);
-    //out << "	Memory(" << address << ", " << mod << ", " << value << ");" << endl;
+}
+bool EudOpsTrigGen::memory(DeathCounter deathCounter, NumericComparison numericComparison, u32 value) {
+    Condition condition(ConditionId::Deaths);
+    condition.players = deathCounter.playerId;
+    condition.unitID = deathCounter.unitId;
+    condition.comparison = (u8)numericComparison;
+    condition.amount = value;
+    return currTrig.addCondition(condition);
+}
+bool EudOpsTrigGen::memory(EudAddress eudAddress, NumericComparison numericComparison, u32 value) {
+    Condition condition(ConditionId::Deaths);
+    condition.players = eudAddress.playerId;
+    condition.unitID = eudAddress.unitId;
+    condition.comparison = (u8)numericComparison;
+    condition.amount = value;
+    return currTrig.addCondition(condition);
 }
 // Most Kills
 // Most Resources
@@ -508,6 +627,22 @@ bool EudOpsTrigGen::setDeaths(u32 playerId, u32 unitId, NumericModifier numericM
     Action action = Action(ActionId::SetDeaths);
     action.group = playerId;
     action.type = unitId;
+    action.type2 = (u8)numericModifier;
+    action.number = value;
+    return currTrig.addAction(action);
+}
+bool EudOpsTrigGen::setDeaths(DeathCounter deathCounter, NumericModifier numericModifier, u32 value) {
+    Action action = Action(ActionId::SetDeaths);
+    action.group = deathCounter.playerId;
+    action.type = deathCounter.unitId;
+    action.type2 = (u8)numericModifier;
+    action.number = value;
+    return currTrig.addAction(action);
+}
+bool EudOpsTrigGen::setDeaths(EudAddress eudAddress, NumericModifier numericModifier, u32 value) {
+    Action action = Action(ActionId::SetDeaths);
+    action.group = eudAddress.playerId;
+    action.type = eudAddress.unitId;
     action.type2 = (u8)numericModifier;
     action.number = value;
     return currTrig.addAction(action);

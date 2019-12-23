@@ -3,11 +3,11 @@
 #include <cstdio>
 #include <fstream>
 #include <string>
-#include <experimental/filesystem>
+#include <filesystem>
 
 std::string GetSystemFileSeparator()
 {
-    wchar_t wideCharSeparator = std::experimental::filesystem::path::preferred_separator;
+    auto wideCharSeparator = std::filesystem::path::preferred_separator;
     char multiByteSeparator = (char)wideCharSeparator;
     char multiByteSeparatorArray[2] = {multiByteSeparator, '\0'};
     return std::string(multiByteSeparatorArray);

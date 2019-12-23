@@ -13,8 +13,12 @@ enum class InputSet : u32 {
 enum class EudOp : u32 {
     Null,
     SetToConstant,
+    AddConstant,
+    SubtractConstant,
     SetToDeaths,
     CopyToDeaths,
+    AddDeaths,
+    SubtractDeaths,
     CheckEqual,
     CheckAtLeast,
     CheckAtMost,

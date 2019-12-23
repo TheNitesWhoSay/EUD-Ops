@@ -5,8 +5,12 @@ const EudOpDef EudOpDef::nullOpDef = EudOpDef(EudOp::Null, "Null", InputSet::Non
 const std::map<u32, EudOpDef> EudOpDef::eudOpsToDefs = {
     { (u32)EudOp::Null, nullOpDef },
     { (u32)EudOp::SetToConstant, EudOpDef(EudOp::SetToConstant, "Set to Constant", InputSet::Constant) },
+    { (u32)EudOp::AddConstant, EudOpDef(EudOp::AddConstant, "Add Constant", InputSet::Constant) },
+    { (u32)EudOp::SubtractConstant, EudOpDef(EudOp::SubtractConstant, "Subtract Constant", InputSet::Constant) },
     { (u32)EudOp::SetToDeaths, EudOpDef(EudOp::SetToDeaths, "Set to Deaths", InputSet::DeathCounter) },
     { (u32)EudOp::CopyToDeaths, EudOpDef(EudOp::CopyToDeaths, "Copy to Deaths", InputSet::DeathCounter) },
+    { (u32)EudOp::AddDeaths, EudOpDef(EudOp::AddDeaths, "Add Deaths", InputSet::DeathCounter) },
+    { (u32)EudOp::SubtractDeaths, EudOpDef(EudOp::SubtractDeaths, "Subtract Deaths", InputSet::DeathCounter) },
     { (u32)EudOp::CheckEqual, EudOpDef(EudOp::CheckEqual, "Check Equal", InputSet::Constant) },
     { (u32)EudOp::CheckAtLeast, EudOpDef(EudOp::CheckAtLeast, "Check At Least", InputSet::Constant) },
     { (u32)EudOp::CheckAtMost, EudOpDef(EudOp::CheckAtMost, "Check At Most", InputSet::Constant) },

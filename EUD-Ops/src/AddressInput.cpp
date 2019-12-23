@@ -170,9 +170,12 @@ void AddressInput::Calculate()
     }
 
     const std::vector<DeathCounter> slackDcs = {
-        DeathCounter(181, 8)
+        DeathCounter(181, 8), DeathCounter(181, 7), DeathCounter(181, 6)
     };
-    GenerationData genData = GenerationData(slackDcs);
+    const std::vector<u32> slackSwitches = {
+        255, 254, 253, 252
+    };
+    GenerationData genData = GenerationData(slackDcs, slackSwitches);
     u32 bitLength = byteLength * 8;
     InputSet inputSet = eudOpDef.inputSet;
     std::string result("");
