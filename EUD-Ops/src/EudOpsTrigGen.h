@@ -34,7 +34,6 @@ class EudOpsTrigGen
         u8 owners[28];
         std::map<u32, std::string> strings;
         std::stack<RestoreAction> restoreActions;
-        //std::stringstream out;
 
         EudOpsTrigGen(GenerationData genData, EudAddress targetAddress)
             : genData(genData), targetAddress(targetAddress), didComment(false),
@@ -53,6 +52,12 @@ class EudOpsTrigGen
         bool setToMemory(EudAddress srcMemoryAddress, bool destructive);
         bool copyToDeaths(DeathCounter destValue, bool destructive);
         bool copyToMemory(EudAddress destMemoryAddress, bool destructive);
+        bool addConstant(u32 constant);
+        bool subtractConstant(u32 constant);
+        bool setToDeaths(DeathCounter srcValue);
+        bool copyToDeaths(DeathCounter destValue);
+        bool addDeaths(DeathCounter addition);
+        bool subtractDeaths(DeathCounter subtraction);
         bool checkEqual(u32 constant);
         bool checkAtLeast(u32 constant);
         bool checkAtMost(u32 constant);
@@ -86,6 +91,8 @@ class EudOpsTrigGen
         // Countdown Timer
         // Deaths
         bool deaths(u32 playerId, u32 unitId, NumericComparison numericComparison, u32 amount);
+        bool deaths(DeathCounter deathCounter, NumericComparison numericComparison, u32 amount);
+        bool deaths(EudAddress eudAddress, NumericComparison numericComparison, u32 amount);
         // Elapsed Time
         // Highest Score
         // Kill
@@ -94,6 +101,8 @@ class EudOpsTrigGen
         // Lowest Score
         // Memory
         bool memory(u32 address, NumericComparison numericComparison, u32 value);
+        bool memory(DeathCounter deathCounter, NumericComparison numericComparison, u32 value);
+        bool memory(EudAddress eudAddress, NumericComparison numericComparison, u32 value);
         // Most Kills
         // Most Resources
         // Never
@@ -149,6 +158,8 @@ class EudOpsTrigGen
         // Set Countdown Timer
         // Set Deaths
         bool setDeaths(u32 playerId, u32 unitId, NumericModifier numericModifier, u32 value);
+        bool setDeaths(DeathCounter deathCounter, NumericModifier numericModifier, u32 value);
+        bool setDeaths(EudAddress eudAddress, NumericModifier numericModifier, u32 value);
         // Set Doodad State
         // Set Invincibility
         // Set Mission Objectives

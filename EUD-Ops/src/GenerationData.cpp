@@ -1,25 +1,27 @@
 #include "GenerationData.h"
 
-GenerationData::GenerationData(const std::vector<DeathCounter> &slackSpace, bool useAddressesForMemory) :
+GenerationData::GenerationData(const std::vector<DeathCounter> &slackSpaceDcs, const std::vector<u32> &slackSpaceSwitchNums, bool useAddressesForMemory) :
     useMemoryCondition(useMemoryCondition), useMemoryAction(useMemoryAction), useAddressesForMemory(useAddressesForMemory)
 {
-    for (DeathCounter dc : slackSpace)
-        unusedSlackSpace.push_back(dc);
+    for (DeathCounter dc : slackSpaceDcs)
+        unusedSlackSpaceDcs.push_back(dc);
+    for (u32 slackSpaceSwitchNum : slackSpaceSwitchNums)
+        unusedSwitchNums.push_back(slackSpaceSwitchNum);
 }
 
-DeathCounter GenerationData::getSlackSpace()
+DeathCounter GenerationData::getSlackSpaceDc()
 {
-    DeathCounter slackSpace = unusedSlackSpace.back();
-    unusedSlackSpace.pop_back();
-    usedSlackSpace.push_back(slackSpace);
-    return slackSpace;
+    DeathCounter slackSpaceDc = unusedSlackSpaceDcs.back();
+    unusedSlackSpaceDcs.pop_back();
+    usedSlackSpaceDcs.push_back(slackSpaceDc);
+    return slackSpaceDc;
 }
 
-void GenerationData::releaseSlackSpace(DeathCounter toRelease)
+void GenerationData::releaseSlackSpaceDc(DeathCounter toRelease)
 {
-    usedSlackSpace.remove(toRelease);
+    usedSlackSpaceDcs.remove(toRelease);
     bool notDuplicate = false;
-    for (DeathCounter dc : unusedSlackSpace)
+    for (DeathCounter dc : unusedSlackSpaceDcs)
     {
         if (dc.unitId == toRelease.unitId && dc.playerId == toRelease.playerId)
         {
@@ -28,5 +30,19 @@ void GenerationData::releaseSlackSpace(DeathCounter toRelease)
         }
     }
     if (notDuplicate)
-        unusedSlackSpace.push_back(toRelease);
+        unusedSlackSpaceDcs.push_back(toRelease);
+}
+
+u32 GenerationData::getSlackSpaceSwitchNum()
+{
+    u32 slackSpaceSwitchNum = unusedSwitchNums.back();
+    unusedSwitchNums.pop_back();
+    usedSwitchNums.push_back(slackSpaceSwitchNum);
+    return slackSpaceSwitchNum;
+}
+
+void GenerationData::releaseSlackSpaceSwitchNum(u32 toRelease)
+{
+    usedSwitchNums.remove(toRelease);
+    unusedSwitchNums.push_back(toRelease);
 }
