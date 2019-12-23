@@ -2,14 +2,15 @@
 #include <stdarg.h>
 #include <cstdarg>
 #include <cmath>
+#include <cstring>
 
-bool EudOpsTrigGen::GenerateNoArg(std::string &output, GenerationData genData, EudOpDef def, EudAddress eudAddress)
+bool EudOpsTrigGen::GenerateNoArg(std::string &output, GenerationData genData, EudOpDef def, EudAddress eudAddress, bool destructive)
 {
     output = "Generate case for " + def.eudOpName + " not found!";
     return false;
 }
 
-bool EudOpsTrigGen::GenerateWithConstant(std::string &output, GenerationData genData, EudOpDef def, EudAddress eudAddress, u32 constant)
+bool EudOpsTrigGen::GenerateWithConstant(std::string &output, GenerationData genData, EudOpDef def, EudAddress eudAddress, u32 constant, bool destructive)
 {
     EudOpsTrigGen eudOpsGen = EudOpsTrigGen(genData, eudAddress);
     bool caseNotFound = false;
@@ -47,14 +48,14 @@ bool EudOpsTrigGen::GenerateWithConstant(std::string &output, GenerationData gen
     else if ( success )
     {
         eudOpsGen.end();
-        eudOpsGen.gen = TextTrigGenerator();
+        eudOpsGen.gen = TextTrigGenerator(genData.useAddressesForMemory, deathTableOffset);
         std::string trigString("");
         return eudOpsGen.gen.GenerateTextTrigs(eudOpsGen.dummyMap, output);
     }
     return success;
 }
 
-bool EudOpsTrigGen::GenerateWithDeathCounter(std::string &output, GenerationData genData, EudOpDef def, EudAddress eudAddress, DeathCounter deathCounter)
+bool EudOpsTrigGen::GenerateWithDeathCounter(std::string &output, GenerationData genData, EudOpDef def, EudAddress eudAddress, DeathCounter deathCounter, bool destructive)
 {
     EudOpsTrigGen eudOpsGen = EudOpsTrigGen(genData, eudAddress);
     bool caseNotFound = false;
@@ -62,10 +63,10 @@ bool EudOpsTrigGen::GenerateWithDeathCounter(std::string &output, GenerationData
     switch (def.eudOp)
     {
     case EudOp::SetToDeaths:
-        success = eudOpsGen.setToDeaths(deathCounter);
+        success = eudOpsGen.setToDeaths(deathCounter, destructive);
         break;
     case EudOp::CopyToDeaths:
-        success = eudOpsGen.copyToDeaths(deathCounter);
+        success = eudOpsGen.copyToDeaths(deathCounter, destructive);
         break;
     default:
         caseNotFound = true;
@@ -80,7 +81,40 @@ bool EudOpsTrigGen::GenerateWithDeathCounter(std::string &output, GenerationData
     else if ( success )
     {
         eudOpsGen.end();
-        eudOpsGen.gen = TextTrigGenerator();
+        eudOpsGen.gen = TextTrigGenerator(genData.useAddressesForMemory, deathTableOffset);
+        std::string trigString("");
+        return eudOpsGen.gen.GenerateTextTrigs(eudOpsGen.dummyMap, output);
+    }
+    return success;
+}
+
+bool EudOpsTrigGen::GenerateWithMemory(std::string &output, GenerationData genData, EudOpDef def, EudAddress eudAddress, EudAddress memoryAddress, bool destructive)
+{
+    EudOpsTrigGen eudOpsGen = EudOpsTrigGen(genData, eudAddress);
+    bool caseNotFound = false;
+    bool success = false;
+    switch (def.eudOp)
+    {
+    case EudOp::SetToMemory:
+        success = eudOpsGen.setToMemory(memoryAddress, destructive);
+        break;
+    case EudOp::CopyToMemory:
+        success = eudOpsGen.copyToMemory(memoryAddress, destructive);
+        break;
+    default:
+        caseNotFound = true;
+        break;
+    }
+
+    if (caseNotFound)
+    {
+        output = "Generate case for " + def.eudOpName + " not found!";
+        return false;
+    }
+    else if ( success )
+    {
+        eudOpsGen.end();
+        eudOpsGen.gen = TextTrigGenerator(genData.useAddressesForMemory, deathTableOffset);
         std::string trigString("");
         return eudOpsGen.gen.GenerateTextTrigs(eudOpsGen.dummyMap, output);
     }
@@ -129,7 +163,7 @@ bool EudOpsTrigGen::setToConstant(u32 constant)
     return true;
 }
 
-bool EudOpsTrigGen::setToDeaths(DeathCounter srcValue)
+bool EudOpsTrigGen::setToDeaths(DeathCounter srcValue, bool destructive)
 {
     u32 address = targetAddress.address;
     u32 bitLength = targetAddress.bitLength;
@@ -139,10 +173,14 @@ bool EudOpsTrigGen::setToDeaths(DeathCounter srcValue)
     u32 bit = 0;
 
     for (; bit < bitsBeforeAddress; bit++)
-        stripBit(slackSpace, bit, true);
-    u32 bitsBeforeRemainder = bit + bitLength;
-    for (; bit < bitLength; bit++)
-        stripBit(slackSpace, bit, false);
+        stripBit(slackSpace, bit, !destructive);
+    if (bitsAfterAddress == 0)
+        setDeaths(targetAddress.playerId, targetAddress.unitId, NumericModifier::SetTo, 0);
+    else
+    {
+        for (; bit < bitLength; bit++)
+            stripBit(slackSpace, bit, false);
+    }
     for (bit = 0; bit < bitLength; bit++)
     {
         trigger(owners);
@@ -164,7 +202,7 @@ bool EudOpsTrigGen::setToDeaths(DeathCounter srcValue)
     return true;
 }
 
-bool EudOpsTrigGen::copyToDeaths(DeathCounter destValue)
+bool EudOpsTrigGen::setToMemory(EudAddress srcMemoryAddress, bool destructive)
 {
     u32 address = targetAddress.address;
     u32 bitLength = targetAddress.bitLength;
@@ -174,10 +212,47 @@ bool EudOpsTrigGen::copyToDeaths(DeathCounter destValue)
     u32 bit = 0;
 
     for (; bit < bitsBeforeAddress; bit++)
-        stripBit(slackSpace, bit, true);
-    u32 bitsBeforeRemainder = bit + bitLength;
-    for (; bit < bitLength; bit++)
-        stripBit(slackSpace, bit, false);
+        stripBit(slackSpace, bit, !destructive);
+    if (bitsAfterAddress == 0)
+        setDeaths(targetAddress.playerId, targetAddress.unitId, NumericModifier::SetTo, 0);
+    else
+    {
+        for (; bit < bitLength; bit++)
+            stripBit(slackSpace, bit, false);
+    }
+    for (bit = 0; bit < bitLength; bit++)
+    {
+        trigger(owners);
+        u32 unshiftedValue = pow(2, bitLength-bit-1);
+        u32 shiftedValue = unshiftedValue << bitsAfterAddress;
+        deaths(srcMemoryAddress.playerId, srcMemoryAddress.unitId, NumericComparison::AtLeast, unshiftedValue);
+        setDeaths(srcMemoryAddress.playerId, srcMemoryAddress.unitId, NumericModifier::Subtract, unshiftedValue);
+        setDeaths(targetAddress.playerId, targetAddress.unitId, NumericModifier::Add, shiftedValue);
+    }
+    while (!restoreActions.empty())
+    {
+        RestoreAction action = restoreActions.top();
+        restoreActions.pop();
+        trigger(owners);
+        deaths(slackSpace.playerId, slackSpace.unitId, NumericComparison::AtLeast, action.modification);
+        setDeaths(slackSpace.playerId, slackSpace.unitId, NumericModifier::Subtract, action.modification);
+        setDeaths(targetAddress.playerId, targetAddress.unitId, NumericModifier::Add, action.modification);
+    }
+    return true;
+}
+
+bool EudOpsTrigGen::copyToDeaths(DeathCounter destValue, bool destructive)
+{
+    std::cout << "destructive: " << (destructive ? "true" : "false") << std::endl;
+    u32 address = targetAddress.address;
+    u32 bitLength = targetAddress.bitLength;
+    u32 bitsBeforeAddress = 8 * (address % 4 == 0 ? 0 : 3-address % 4);
+    u32 bitsAfterAddress = 32 - bitsBeforeAddress - bitLength;
+    DeathCounter slackSpace = genData.getSlackSpace();
+    u32 bit = 0;
+
+    for (; bit < bitsBeforeAddress; bit++)
+        stripBit(slackSpace, bit, !destructive);
     for (bit = 0; bit < bitLength; bit++)
     {
         trigger(owners);
@@ -185,7 +260,47 @@ bool EudOpsTrigGen::copyToDeaths(DeathCounter destValue)
         u32 shiftedValue = unshiftedValue << bitsAfterAddress;
         deaths(targetAddress.playerId, targetAddress.unitId, NumericComparison::AtLeast, shiftedValue);
         setDeaths(targetAddress.playerId, targetAddress.unitId, NumericModifier::Subtract, shiftedValue);
-        setDeaths(destValue.playerId, destValue.unitId, NumericModifier::Add, shiftedValue);
+        setDeaths(destValue.playerId, destValue.unitId, NumericModifier::Add, unshiftedValue);
+        if ( !destructive ) {
+            setDeaths(slackSpace.playerId, slackSpace.unitId, NumericModifier::Add, shiftedValue);
+            restoreActions.push(RestoreAction(slackSpace, shiftedValue));
+        }
+    }
+    while (!restoreActions.empty())
+    {
+        RestoreAction action = restoreActions.top();
+        restoreActions.pop();
+        trigger(owners);
+        deaths(slackSpace.playerId, slackSpace.unitId, NumericComparison::AtLeast, action.modification);
+        setDeaths(slackSpace.playerId, slackSpace.unitId, NumericModifier::Subtract, action.modification);
+        setDeaths(targetAddress.playerId, targetAddress.unitId, NumericModifier::Add, action.modification);
+    }
+    return true;
+}
+
+bool EudOpsTrigGen::copyToMemory(EudAddress destMemoryAddress, bool destructive)
+{
+    u32 address = targetAddress.address;
+    u32 bitLength = targetAddress.bitLength;
+    u32 bitsBeforeAddress = 8 * (address % 4 == 0 ? 0 : 3-address % 4);
+    u32 bitsAfterAddress = 32 - bitsBeforeAddress - bitLength;
+    DeathCounter slackSpace = genData.getSlackSpace();
+    u32 bit = 0;
+
+    for (; bit < bitsBeforeAddress; bit++)
+        stripBit(slackSpace, bit, !destructive);
+    for (bit = 0; bit < bitLength; bit++)
+    {
+        trigger(owners);
+        u32 unshiftedValue = pow(2, bitLength-bit-1);
+        u32 shiftedValue = unshiftedValue << bitsAfterAddress;
+        deaths(targetAddress.playerId, targetAddress.unitId, NumericComparison::AtLeast, shiftedValue);
+        setDeaths(targetAddress.playerId, targetAddress.unitId, NumericModifier::Subtract, shiftedValue);
+        setDeaths(destMemoryAddress.playerId, destMemoryAddress.unitId, NumericModifier::Add, unshiftedValue);
+        if ( !destructive ) {
+            setDeaths(slackSpace.playerId, slackSpace.unitId, NumericModifier::Add, shiftedValue);
+            restoreActions.push(RestoreAction(slackSpace, shiftedValue));
+        }
     }
     while (!restoreActions.empty())
     {

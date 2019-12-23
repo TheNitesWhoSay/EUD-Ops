@@ -8,6 +8,8 @@
 #include "TextTrigGenerator.h"
 #include <stack>
 
+constexpr u32 deathTableOffset = 0x0058A364;
+
 class RestoreAction
 {
 public:
@@ -19,9 +21,10 @@ public:
 class EudOpsTrigGen
 {
     public:
-        static bool GenerateNoArg(std::string &output, GenerationData genData, EudOpDef def, EudAddress address);
-        static bool GenerateWithConstant(std::string &output, GenerationData genData, EudOpDef def, EudAddress address, u32 constant);
-        static bool GenerateWithDeathCounter(std::string &output, GenerationData genData, EudOpDef def, EudAddress address, DeathCounter deathCounter);
+        static bool GenerateNoArg(std::string &output, GenerationData genData, EudOpDef def, EudAddress address, bool destructive = false);
+        static bool GenerateWithConstant(std::string &output, GenerationData genData, EudOpDef def, EudAddress address, u32 constant, bool destructive = false);
+        static bool GenerateWithDeathCounter(std::string &output, GenerationData genData, EudOpDef def, EudAddress address, DeathCounter deathCounter, bool destructive = false);
+        static bool GenerateWithMemory(std::string &output, GenerationData genData, EudOpDef def, EudAddress address, EudAddress memoryAddress, bool destructive = false);
 
         EudAddress targetAddress;
         GenerationData genData;
@@ -29,14 +32,13 @@ class EudOpsTrigGen
         ScenarioPtr dummyMap;
         
         u8 owners[28];
-        u32 nextStringId;
         std::map<u32, std::string> strings;
         std::stack<RestoreAction> restoreActions;
         //std::stringstream out;
 
         EudOpsTrigGen(GenerationData genData, EudAddress targetAddress)
-            : genData(genData), targetAddress(targetAddress), didComment(false), nextStringId(0),
-        noComments(false), emptyComments(false), commentAll(true), triggerCount(0)
+            : genData(genData), targetAddress(targetAddress), didComment(false),
+        noComments(false), emptyComments(false), commentAll(true), triggerCount(0), gen(genData.useAddressesForMemory, deathTableOffset)
         {
             endl[0] = '\r';
             endl[1] = '\n';
@@ -47,8 +49,10 @@ class EudOpsTrigGen
 
     protected:
         bool setToConstant(u32 constant);
-        bool setToDeaths(DeathCounter srcValue);
-        bool copyToDeaths(DeathCounter destValue);
+        bool setToDeaths(DeathCounter srcValue, bool destructive);
+        bool setToMemory(EudAddress srcMemoryAddress, bool destructive);
+        bool copyToDeaths(DeathCounter destValue, bool destructive);
+        bool copyToMemory(EudAddress destMemoryAddress, bool destructive);
         bool checkEqual(u32 constant);
         bool checkAtLeast(u32 constant);
         bool checkAtMost(u32 constant);
@@ -58,6 +62,7 @@ class EudOpsTrigGen
         void stripBit(DeathCounter slackSpace, u32 bit, bool restore);
 
     private:
+        bool useAddressesForMemory;
         char endl[2];
         bool didComment;
         bool noComments;

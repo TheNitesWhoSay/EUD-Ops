@@ -1,6 +1,7 @@
 #include "GenerationData.h"
 
-GenerationData::GenerationData(const std::vector<DeathCounter> &slackSpace)
+GenerationData::GenerationData(const std::vector<DeathCounter> &slackSpace, bool useAddressesForMemory) :
+    useMemoryCondition(useMemoryCondition), useMemoryAction(useMemoryAction), useAddressesForMemory(useAddressesForMemory)
 {
     for (DeathCounter dc : slackSpace)
         unusedSlackSpace.push_back(dc);

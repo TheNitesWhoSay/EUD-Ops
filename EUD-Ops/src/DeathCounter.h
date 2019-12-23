@@ -10,14 +10,13 @@ class DeathCounter
         const u32 playerId; // Zero-based
 
         DeathCounter(u32 unitId, u32 playerId) : unitId(unitId), playerId(playerId) {}
-        bool operator==(const DeathCounter &rhs) {
-            return unitId == rhs.unitId && playerId == rhs.playerId;
-        }
         //friend std::ostream& operator<<(std::ostream& os, const DeathCounter& dc);
         std::string toString() {
             return "Death(unitId:" + std::to_string(unitId) + ", playerId:" + std::to_string(playerId) + ")";
         }
 };
+
+bool operator==(const DeathCounter & lhs, const DeathCounter & rhs);
 
 //std::ostream& operator<<(std::ostream &os, const DeathCounter &dc)
 //{

@@ -19,7 +19,13 @@ enum EnumAddressInput {
     ID_UNIT_DROPDOWN,
     ID_CONSTANT_TEXT,
     ID_CONSTANT_INPUT,
-    ID_BUTTON_CALCULATE
+    ID_MEMORY_TEXT,
+    ID_MEMORY_INPUT,
+    ID_BUTTON_CALCULATE,
+    ID_CHECK_DESTROY_SOURCE,
+    ID_CHECK_USE_MEMORY_CONDITION,
+    ID_CHECK_USE_MEMORY_ACTION,
+    ID_CHECK_USE_ADDRESSES_FOR_MEMORY
 };
 
 AddressInput::AddressInput() : lastSelectedBitLength(32)
@@ -114,6 +120,9 @@ void AddressInput::OperationChanged()
     case InputSet::DeathCounter:
         ShowDeathInput();
         break;
+    case InputSet::Memory:
+        ShowMemoryInput();
+        break;
     }
 }
 
@@ -169,16 +178,20 @@ void AddressInput::Calculate()
         return;
     }
 
+    bool destroySource = checkDestroySource.isChecked();
+    bool useAddressesForMemory = checkUseAddressesForMemory.isChecked();
+
     const std::vector<DeathCounter> slackDcs = {
         DeathCounter(181, 8)
     };
-    GenerationData genData = GenerationData(slackDcs);
+    GenerationData genData = GenerationData(slackDcs, useAddressesForMemory);
     u32 bitLength = byteLength * 8;
     InputSet inputSet = eudOpDef.inputSet;
     std::string result("");
+    
     if (inputSet == InputSet::None)
     {
-        EudOpsTrigGen::GenerateNoArg(result, genData, eudOpDef, EudAddress(address, bitLength));
+        EudOpsTrigGen::GenerateNoArg(result, genData, eudOpDef, EudAddress(address, bitLength), destroySource);
     }
     else if (inputSet == InputSet::Constant)
     {
@@ -188,7 +201,7 @@ void AddressInput::Calculate()
             Error("Invalid constant entry!");
             return;
         }
-        EudOpsTrigGen::GenerateWithConstant(result, genData, eudOpDef, EudAddress(address, bitLength), constantValue);
+        EudOpsTrigGen::GenerateWithConstant(result, genData, eudOpDef, EudAddress(address, bitLength), constantValue, destroySource);
     }
     else if (inputSet == InputSet::DeathCounter)
     {
@@ -202,13 +215,23 @@ void AddressInput::Calculate()
             }
         }
 
-        u8 player;
+        u32 player;
         if (!playerDropdown.GetPlayerNum(player))
         {
             Error("Internal error on player input!");
             return;
         }
-        EudOpsTrigGen::GenerateWithDeathCounter(result, genData, eudOpDef, EudAddress(address, bitLength), DeathCounter(unitId, player));
+        EudOpsTrigGen::GenerateWithDeathCounter(result, genData, eudOpDef, EudAddress(address, bitLength), DeathCounter(unitId, player), destroySource);
+    }
+    else if (inputSet == InputSet::Memory)
+    {
+        u32 memory;
+        if (!memoryInput.GetEditNum<u32>(memory))
+        {
+            Error("Invalid constant entry!");
+            return;
+        }
+        EudOpsTrigGen::GenerateWithMemory(result, genData, eudOpDef, EudAddress(address, bitLength), EudAddress(memory, 32), destroySource);
     }
     if (result.length() > 0)
         eudOps.mainPlot.triggerOutput.SetOutput(result.c_str());
@@ -220,6 +243,7 @@ void AddressInput::HideAllInputs()
 {
     HideConstantInput();
     HideDeathInput();
+    HideMemoryInput();
 }
 
 bool AddressInput::CreateSubWindows()
@@ -228,34 +252,43 @@ bool AddressInput::CreateSubWindows()
 
     const std::vector<std::string> byteLengths = { "4", "3", "2", "1" };
 
-    addressText.CreateThis(ClassWindow::getHandle(), 5, 5, 75, 20, "Address: ", EnumAddressInput::ID_ADDRESS_TEXT);
+    addressText.CreateThis(ClassWindow::getHandle(), 5, 5, 85, 20, "Address: ", EnumAddressInput::ID_ADDRESS_TEXT);
     addressInput.CreateThis(ClassWindow::getHandle(), addressText.Right() + 5, 5, 100, 20, false, EnumAddressInput::ID_ADDRESS_INPUT);
-    byteLengthText.CreateThis(ClassWindow::getHandle(), 5, addressInput.Bottom() + 5, 75, 20, "Length (Bytes): ", EnumAddressInput::ID_BYTE_LENGTH_TEXT);
+    byteLengthText.CreateThis(ClassWindow::getHandle(), 5, addressInput.Bottom() + 5, 85, 20, "Length (Bytes): ", EnumAddressInput::ID_BYTE_LENGTH_TEXT);
     byteLengthDropdown.CreateThis(ClassWindow::getHandle(), byteLengthText.Right() + 5, addressInput.Bottom() + 5, 100, 250, false, true, EnumAddressInput::ID_BYTE_LENGTH_DROPDOWN, byteLengths, defaultFont);
-    eudOperationText.CreateThis(ClassWindow::getHandle(), 5, byteLengthDropdown.Bottom() + 5, 75, 20, "EUD Opeartion: ", EnumAddressInput::ID_EUD_OPERATION_TEXT);
+    eudOperationText.CreateThis(ClassWindow::getHandle(), 5, byteLengthDropdown.Bottom() + 5, 85, 20, "EUD Opeartion: ", EnumAddressInput::ID_EUD_OPERATION_TEXT);
     eudOperationDropdown.CreateThis(ClassWindow::getHandle(), eudOperationText.Right() + 5, byteLengthDropdown.Bottom() + 5, 100, 250, false, true, EnumAddressInput::ID_EUD_OPERATION_DROPDOWN, eudOperationName, defaultFont);
     LimitByteLengthTo(4);
     eudOperationDropdown.SetSel(0);
 
     // Death Input
-    playerText.CreateThis(ClassWindow::getHandle(), 5, eudOperationDropdown.Bottom() + 5, 75, 20, "Death Player: ", EnumAddressInput::ID_PLAYER_TEXT);
+    playerText.CreateThis(ClassWindow::getHandle(), 5, eudOperationDropdown.Bottom() + 5, 85, 20, "Death Player: ", EnumAddressInput::ID_PLAYER_TEXT);
     playerDropdown.CreateThis(ClassWindow::getHandle(), playerText.Right() + 5, eudOperationDropdown.Bottom() + 5, 100, 250, EnumAddressInput::ID_PLAYER_DROPDOWN, true);
-    unitText.CreateThis(ClassWindow::getHandle(), 5, playerDropdown.Bottom() + 5, 75, 20, "Death Unit: ", EnumAddressInput::ID_UNIT_TEXT);
+    unitText.CreateThis(ClassWindow::getHandle(), 5, playerDropdown.Bottom() + 5, 85, 20, "Death Unit: ", EnumAddressInput::ID_UNIT_TEXT);
     unitDropdown.CreateThis(ClassWindow::getHandle(), unitText.Right() + 5, playerDropdown.Bottom() + 5, 100, 250, true, false, EnumAddressInput::ID_UNIT_DROPDOWN, NumUnitNames, DefaultUnitDisplayName, defaultFont);
     unitDropdown.SetSel(0);
     unitDropdown.ClearEditSel();
 
     // Constant Input
-    constantText.CreateThis(ClassWindow::getHandle(), 5, eudOperationDropdown.Bottom() + 5, 75, 20, "Constant Value: ", EnumAddressInput::ID_CONSTANT_TEXT);
+    constantText.CreateThis(ClassWindow::getHandle(), 5, eudOperationDropdown.Bottom() + 5, 85, 20, "Constant Value: ", EnumAddressInput::ID_CONSTANT_TEXT);
     constantInput.CreateThis(ClassWindow::getHandle(), constantText.Right() + 5, eudOperationDropdown.Bottom() + 5, 100, 20, false, EnumAddressInput::ID_CONSTANT_INPUT);
     constantInput.SetEditNum(0);
 
+    // Memory Input
+    memoryText.CreateThis(ClassWindow::getHandle(), 5, eudOperationDropdown.Bottom() + 5, 85, 20, "Memory Address: ", EnumAddressInput::ID_MEMORY_TEXT);
+    memoryInput.CreateThis(ClassWindow::getHandle(), memoryText.Right() + 5, eudOperationDropdown.Bottom() + 5, 100, 20, false, EnumAddressInput::ID_MEMORY_INPUT);
+    memoryInput.SetText("0x0");
+
     buttonCalculate.CreateThis(ClassWindow::getHandle(), 5, unitDropdown.Bottom() + 5, 150, 25, "Calculate!", EnumAddressInput::ID_BUTTON_CALCULATE);
+
+    checkDestroySource.CreateThis(ClassWindow::getHandle(), addressInput.Right() + 5, addressInput.Top(), 150, 25, false, "Destroy Source", EnumAddressInput::ID_CHECK_DESTROY_SOURCE);
+    checkUseAddressesForMemory.CreateThis(ClassWindow::getHandle(), checkDestroySource.Left(), checkDestroySource.Bottom() + 5, 150, 25, true, "Use Addresses For Memory", EnumAddressInput::ID_CHECK_USE_ADDRESSES_FOR_MEMORY);
 
     addressInput.FocusThis();
     addressInput.SetText("0x0");
     addressInput.SetSel(3, 3);
     HideDeathInput();
+    HideMemoryInput();
     return true;
 }
 
@@ -273,6 +306,12 @@ void AddressInput::HideConstantInput()
     constantInput.Hide();
 }
 
+void AddressInput::HideMemoryInput()
+{
+    memoryText.Hide();
+    memoryInput.Hide();
+}
+
 void AddressInput::ShowDeathInput()
 {
     playerText.Show();
@@ -285,4 +324,10 @@ void AddressInput::ShowConstantInput()
 {
     constantText.Show();
     constantInput.Show();
+}
+
+void AddressInput::ShowMemoryInput()
+{
+    memoryText.Show();
+    memoryInput.Show();
 }

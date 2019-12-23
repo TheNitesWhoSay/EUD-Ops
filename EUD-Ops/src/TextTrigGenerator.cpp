@@ -106,7 +106,7 @@ void CollapsableDefines()
             output.addStr(numericModifiers[src], std::strlen(numericModifiers[src]));   \
         else { std::strcpy(number, std::to_string(src).c_str()); output.addStr(number, std::strlen(number)); } }
 
-    #define ADD_TEXTTRIG_SCRIPT(src) {                                              \
+#define ADD_TEXTTRIG_SCRIPT(src) {                                              \
         if ( src == 0 )                                                             \
             output.addStr("No Script", 9);                                          \
         else                                                                        \
@@ -117,21 +117,28 @@ void CollapsableDefines()
             else { output.add('\"'); output.addStr((char*)&src, 4); output.add('\"'); } \
         } }
 
-    #define ADD_TEXTTRIG_NUM_UNITS(src) {                                           \
+#define ADD_TEXTTRIG_NUM_UNITS(src) {                                           \
         if ( src == 0 ) output.addStr("All", 3);                                    \
         else { std::strcpy(number, std::to_string(src).c_str()); output.addStr(number, std::strlen(number)); } }
 
-    #define ADD_TEXTTRIG_NUMBER(src) {                                              \
+#define ADD_TEXTTRIG_NUMBER(src) {                                              \
         std::strcpy(number, std::to_string(src).c_str()); output.addStr(number, std::strlen(number)); }
 
-    #define ADD_TEXTTRIG_TEXT_FLAGS(src) {                                                      \
+#define ADD_TEXTTRIG_MEMORY(src) {                                                          \
+        if ( useAddressesForMemory )                                                            \
+            snprintf(number, sizeof(number)/sizeof(char), "0x%X", src*4+deathTableOffset);      \
+        else                                                                                    \
+            std::strcpy(number, std::to_string(src).c_str());                                   \
+        output.addStr(number, std::strlen(number)); }
+
+#define ADD_TEXTTRIG_TEXT_FLAGS(src) {                                                      \
         if      ( (src&(u8)Action::Flags::AlwaysDisplay) == 0 )                                 \
             output.addStr(textFlags[0], std::strlen(textFlags[0]));                             \
         else if ( (src&(u8)Action::Flags::AlwaysDisplay) == (u8)Action::Flags::AlwaysDisplay )  \
             output.addStr(textFlags[1], std::strlen(textFlags[1])); }
 }
 
-TextTrigGenerator::TextTrigGenerator() : goodConditionTable(false), goodActionTable(false)
+TextTrigGenerator::TextTrigGenerator(bool useAddressesForMemory, u32 deathTableOffset) : goodConditionTable(false), goodActionTable(false), useAddressesForMemory(useAddressesForMemory), deathTableOffset(deathTableOffset)
 {
     stringTable.clear();
     extendedStringTable.clear();
@@ -153,17 +160,17 @@ bool TextTrigGenerator::GenerateTextTrigs(ScenarioPtr map, u32 trigId, std::stri
     Trigger* trig;
     TrigSegment trigBuff(new buffer((u32)SectionId::TRIG));
     return this != nullptr &&
-           map != nullptr &&
-           map->getTrigger(trig, trigId) &&
-           trigBuff->add<Trigger>(*trig) &&
-           BuildTextTrigs(map, trigBuff, trigString);
+        map != nullptr &&
+        map->getTrigger(trig, trigId) &&
+        trigBuff->add<Trigger>(*trig) &&
+        BuildTextTrigs(map, trigBuff, trigString);
 }
 
 bool TextTrigGenerator::LoadScenario(ScenarioPtr map)
 {
     return this != nullptr &&
-           map != nullptr &&
-           LoadScenario(map, false, true);
+        map != nullptr &&
+        LoadScenario(map, false, true);
 }
 
 void TextTrigGenerator::ClearScenario()
@@ -412,101 +419,101 @@ inline void TextTrigGenerator::AddConditionArgument(buffer &output, Condition& c
 {
     switch ( conditionId )
     {
-        case ConditionId::Accumulate: // Player, NumericComparison, Amount, ResourceType
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_PLAYER(condition.players) break;
-                case 1: ADD_TEXTTRIG_NUMERIC_COMPARISON(condition.comparison) break;
-                case 2: ADD_TEXTTRIG_NUMBER(condition.amount) break;
-                case 3: ADD_TEXTTRIG_RESOURCE_TYPE(condition.typeIndex) break;
-            }
-            break;
-        case ConditionId::Bring: // Player, Unit, Location, NumericComparison, Amount
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_PLAYER(condition.players) break;
-                case 1: ADD_TEXTTRIG_UNIT(condition.unitID) break;
-                case 2: ADD_TEXTTRIG_LOCATION(condition.locationNum) break;
-                case 3: ADD_TEXTTRIG_NUMERIC_COMPARISON(condition.comparison) break;
-                case 4: ADD_TEXTTRIG_NUMBER(condition.amount) break;
-            }
-            break;
-        case ConditionId::Command: // Player, Unit, NumericComparison, Amount
-        case ConditionId::Deaths:  // Player, Unit, NumericComparison, Amount
-        case ConditionId::Kill:    // Player, Unit, NumericComparison, Amount
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_PLAYER(condition.players) break;
-                case 1: ADD_TEXTTRIG_UNIT(condition.unitID) break;
-                case 2: ADD_TEXTTRIG_NUMERIC_COMPARISON(condition.comparison) break;
-                case 3: ADD_TEXTTRIG_NUMBER(condition.amount) break;
-            }
-            break;
-        case ConditionId::CommandTheLeast: // Unit
-        case ConditionId::CommandTheMost:  // Unit
-        case ConditionId::LeastKills:      // Unit
-        case ConditionId::MostKills:       // Unit
-            if ( stdTextTrigArgNum == 0 ) ADD_TEXTTRIG_UNIT(condition.unitID);
-            break;
-        case ConditionId::CommandTheLeastAt: // Unit, Location
-        case ConditionId::CommandTheMostAt:  // Unit, Location
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_UNIT(condition.unitID) break;
-                case 1: ADD_TEXTTRIG_LOCATION(condition.locationNum) break;
-            }
-            break;
-        case ConditionId::CountdownTimer: // NumericComparison, Amount
-        case ConditionId::ElapsedTime:    // NumericComparison, Amount
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_NUMERIC_COMPARISON(condition.comparison) break;
-                case 1: ADD_TEXTTRIG_NUMBER(condition.amount) break;
-            }
-            break;
-        case ConditionId::HighestScore: // ScoreType
-        case ConditionId::LowestScore:  // ScoreType
-            if ( stdTextTrigArgNum == 0 ) ADD_TEXTTRIG_SCORE_TYPE(condition.typeIndex);
-            break;
-        case ConditionId::LeastResources: // ResourceType
-        case ConditionId::MostResources:  // ResourceType
-            if ( stdTextTrigArgNum == 0 ) ADD_TEXTTRIG_RESOURCE_TYPE(condition.typeIndex);
-            break;
-        case ConditionId::Opponents: // Player, NumericComparison, Amount
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_PLAYER(condition.players) break;
-                case 1: ADD_TEXTTRIG_NUMERIC_COMPARISON(condition.comparison) break;
-                case 2: ADD_TEXTTRIG_NUMBER(condition.amount) break;
-            }
-            break;
-        case ConditionId::Score: // Player, ScoreType, NumericComparison, Amount
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_PLAYER(condition.players) break;
-                case 1: ADD_TEXTTRIG_SCORE_TYPE(condition.typeIndex) break;
-                case 2: ADD_TEXTTRIG_NUMERIC_COMPARISON(condition.comparison) break;
-                case 3: ADD_TEXTTRIG_NUMBER(condition.amount) break;
-            }
-            break;
-        case ConditionId::Switch: // Switch, SwitchState
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_SWITCH(condition.typeIndex) break;
-                case 1: ADD_TEXTTRIG_SWITCH_STATE(condition.comparison) break;
-            }
-            break;
-        case ConditionId::Memory: // MemOffset, NumericComparison, Amount
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_NUMBER(condition.players) break;
-                case 1: ADD_TEXTTRIG_NUMERIC_COMPARISON(condition.comparison) break;
-                case 2: ADD_TEXTTRIG_NUMBER(condition.amount) break;
-            }
-            break;
-        default: // Location, Player, Amount, Unit, NumericComparison, Condition, TypeIndex, Flags, Internal
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_LOCATION(condition.locationNum) break;
-                case 1: ADD_TEXTTRIG_PLAYER(condition.players) break;
-                case 2: ADD_TEXTTRIG_NUMBER(condition.amount) break;
-                case 3: ADD_TEXTTRIG_UNIT(condition.unitID) break;
-                case 4: ADD_TEXTTRIG_NUMERIC_COMPARISON(condition.comparison) break;
-                case 5: ADD_TEXTTRIG_NUMBER(condition.condition) break;
-                case 6: ADD_TEXTTRIG_NUMBER(condition.typeIndex) break;
-                case 7: ADD_TEXTTRIG_NUMBER(condition.flags) break;
-                case 8: ADD_TEXTTRIG_NUMBER(condition.internalData) break;
-            }
+    case ConditionId::Accumulate: // Player, NumericComparison, Amount, ResourceType
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_PLAYER(condition.players) break;
+        case 1: ADD_TEXTTRIG_NUMERIC_COMPARISON(condition.comparison) break;
+        case 2: ADD_TEXTTRIG_NUMBER(condition.amount) break;
+        case 3: ADD_TEXTTRIG_RESOURCE_TYPE(condition.typeIndex) break;
+        }
+        break;
+    case ConditionId::Bring: // Player, Unit, Location, NumericComparison, Amount
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_PLAYER(condition.players) break;
+        case 1: ADD_TEXTTRIG_UNIT(condition.unitID) break;
+        case 2: ADD_TEXTTRIG_LOCATION(condition.locationNum) break;
+        case 3: ADD_TEXTTRIG_NUMERIC_COMPARISON(condition.comparison) break;
+        case 4: ADD_TEXTTRIG_NUMBER(condition.amount) break;
+        }
+        break;
+    case ConditionId::Command: // Player, Unit, NumericComparison, Amount
+    case ConditionId::Deaths:  // Player, Unit, NumericComparison, Amount
+    case ConditionId::Kill:    // Player, Unit, NumericComparison, Amount
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_PLAYER(condition.players) break;
+        case 1: ADD_TEXTTRIG_UNIT(condition.unitID) break;
+        case 2: ADD_TEXTTRIG_NUMERIC_COMPARISON(condition.comparison) break;
+        case 3: ADD_TEXTTRIG_NUMBER(condition.amount) break;
+        }
+        break;
+    case ConditionId::CommandTheLeast: // Unit
+    case ConditionId::CommandTheMost:  // Unit
+    case ConditionId::LeastKills:      // Unit
+    case ConditionId::MostKills:       // Unit
+        if ( stdTextTrigArgNum == 0 ) ADD_TEXTTRIG_UNIT(condition.unitID);
+        break;
+    case ConditionId::CommandTheLeastAt: // Unit, Location
+    case ConditionId::CommandTheMostAt:  // Unit, Location
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_UNIT(condition.unitID) break;
+        case 1: ADD_TEXTTRIG_LOCATION(condition.locationNum) break;
+        }
+        break;
+    case ConditionId::CountdownTimer: // NumericComparison, Amount
+    case ConditionId::ElapsedTime:    // NumericComparison, Amount
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_NUMERIC_COMPARISON(condition.comparison) break;
+        case 1: ADD_TEXTTRIG_NUMBER(condition.amount) break;
+        }
+        break;
+    case ConditionId::HighestScore: // ScoreType
+    case ConditionId::LowestScore:  // ScoreType
+        if ( stdTextTrigArgNum == 0 ) ADD_TEXTTRIG_SCORE_TYPE(condition.typeIndex);
+        break;
+    case ConditionId::LeastResources: // ResourceType
+    case ConditionId::MostResources:  // ResourceType
+        if ( stdTextTrigArgNum == 0 ) ADD_TEXTTRIG_RESOURCE_TYPE(condition.typeIndex);
+        break;
+    case ConditionId::Opponents: // Player, NumericComparison, Amount
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_PLAYER(condition.players) break;
+        case 1: ADD_TEXTTRIG_NUMERIC_COMPARISON(condition.comparison) break;
+        case 2: ADD_TEXTTRIG_NUMBER(condition.amount) break;
+        }
+        break;
+    case ConditionId::Score: // Player, ScoreType, NumericComparison, Amount
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_PLAYER(condition.players) break;
+        case 1: ADD_TEXTTRIG_SCORE_TYPE(condition.typeIndex) break;
+        case 2: ADD_TEXTTRIG_NUMERIC_COMPARISON(condition.comparison) break;
+        case 3: ADD_TEXTTRIG_NUMBER(condition.amount) break;
+        }
+        break;
+    case ConditionId::Switch: // Switch, SwitchState
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_SWITCH(condition.typeIndex) break;
+        case 1: ADD_TEXTTRIG_SWITCH_STATE(condition.comparison) break;
+        }
+        break;
+    case ConditionId::Memory: // MemOffset, NumericComparison, Amount
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_MEMORY(condition.players) break;
+        case 1: ADD_TEXTTRIG_NUMERIC_COMPARISON(condition.comparison) break;
+        case 2: ADD_TEXTTRIG_NUMBER(condition.amount) break;
+        }
+        break;
+    default: // Location, Player, Amount, Unit, NumericComparison, Condition, TypeIndex, Flags, Internal
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_LOCATION(condition.locationNum) break;
+        case 1: ADD_TEXTTRIG_PLAYER(condition.players) break;
+        case 2: ADD_TEXTTRIG_NUMBER(condition.amount) break;
+        case 3: ADD_TEXTTRIG_UNIT(condition.unitID) break;
+        case 4: ADD_TEXTTRIG_NUMERIC_COMPARISON(condition.comparison) break;
+        case 5: ADD_TEXTTRIG_NUMBER(condition.condition) break;
+        case 6: ADD_TEXTTRIG_NUMBER(condition.typeIndex) break;
+        case 7: ADD_TEXTTRIG_NUMBER(condition.flags) break;
+        case 8: ADD_TEXTTRIG_NUMBER(condition.internalData) break;
+        }
     }
 }
 
@@ -514,280 +521,287 @@ inline void TextTrigGenerator::AddActionArgument(buffer &output, Action &action,
 {
     switch ( AID )
     {
-        case ActionId::CenterView:  // Location
-        case ActionId::MinimapPing: // Location
-            if ( stdTextTrigArgNum == 0 ) ADD_TEXTTRIG_LOCATION(action.location)
+    case ActionId::CenterView:  // Location
+    case ActionId::MinimapPing: // Location
+        if ( stdTextTrigArgNum == 0 ) ADD_TEXTTRIG_LOCATION(action.location)
             break;
-        case ActionId::Comment:              // String
-        case ActionId::SetMissionObjectives: // String
-        case ActionId::SetNextScenario:      // String
-            if ( stdTextTrigArgNum == 0 ) ADD_TEXTTRIG_STRING(action.stringNum)
+    case ActionId::Comment:              // String
+    case ActionId::SetMissionObjectives: // String
+    case ActionId::SetNextScenario:      // String
+        if ( stdTextTrigArgNum == 0 ) ADD_TEXTTRIG_STRING(action.stringNum)
             break;
-        case ActionId::KillUnitAtLocation: // Player, Unit, NumUnits, Location
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
-                case 1: ADD_TEXTTRIG_UNIT(action.type) break;
-                case 2: ADD_TEXTTRIG_NUM_UNITS(action.type2) break;
-                case 3: ADD_TEXTTRIG_LOCATION(action.location) break;
-            }
+    case ActionId::KillUnitAtLocation: // Player, Unit, NumUnits, Location
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
+        case 1: ADD_TEXTTRIG_UNIT(action.type) break;
+        case 2: ADD_TEXTTRIG_NUM_UNITS(action.type2) break;
+        case 3: ADD_TEXTTRIG_LOCATION(action.location) break;
+        }
+        break;
+    case ActionId::CreateUnit: // Player, Unit, Number (NumUnits w/o 'All'), Location
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
+        case 1: ADD_TEXTTRIG_UNIT(action.type) break;
+        case 2: ADD_TEXTTRIG_NUMBER(action.type2) break;
+        case 3: ADD_TEXTTRIG_LOCATION(action.location) break;
+        }
+        break;
+    case ActionId::CreateUnitWithProperties: // Player, Unit, Number (NumUnits w/o 'All'), Location, Properties
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
+        case 1: ADD_TEXTTRIG_UNIT(action.type) break;
+        case 2: ADD_TEXTTRIG_NUMBER(action.type2) break;
+        case 3: ADD_TEXTTRIG_LOCATION(action.location) break;
+        case 4: ADD_TEXTTRIG_NUMBER(action.number) break;
+        }
+        break;
+    case ActionId::DisplayTextMessage: // TextFlags, String
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_TEXT_FLAGS(action.flags) break;
+        case 1: ADD_TEXTTRIG_STRING(action.stringNum) break;
+        }
+        break;
+    case ActionId::GiveUnitsToPlayer: // Player, SecondPlayer, Unit, NumUnits, Location
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
+        case 1: ADD_TEXTTRIG_PLAYER(action.number) break;
+        case 2: ADD_TEXTTRIG_UNIT(action.type) break;
+        case 3: ADD_TEXTTRIG_NUM_UNITS(action.type2) break;
+        case 4: ADD_TEXTTRIG_LOCATION(action.location) break;
+        }
+        break;
+    case ActionId::KillUnit:   // Player, Unit
+    case ActionId::RemoveUnit: // Player, Unit
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
+        case 1: ADD_TEXTTRIG_UNIT(action.type) break;
+        }
+        break;
+    case ActionId::LeaderboardCtrlAtLoc: // String, Unit, Location
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_STRING(action.stringNum) break;
+        case 1: ADD_TEXTTRIG_UNIT(action.type) break;
+        case 2: ADD_TEXTTRIG_LOCATION(action.location) break;
+        }
+        break;
+    case ActionId::LeaderboardCtrl: // String, Unit
+    case ActionId::LeaderboardKills: // String, Unit
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_STRING(action.stringNum) break;
+        case 1: ADD_TEXTTRIG_UNIT(action.type) break;
+        }
+        break;
+    case ActionId::LeaderboardGreed: // Amount
+        if ( stdTextTrigArgNum == 0 ) ADD_TEXTTRIG_NUMBER(action.number);
+        break;
+    case ActionId::LeaderboardPoints: // String, ScoreType
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_STRING(action.stringNum) break;
+        case 1: ADD_TEXTTRIG_SCORE_TYPE(action.type) break;
+        }
+        break;
+    case ActionId::LeaderboardResources: // String, ResourceType
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_STRING(action.stringNum) break;
+        case 1: ADD_TEXTTRIG_RESOURCE_TYPE(action.type) break;
+        }
+        break;
+    case ActionId::LeaderboardCompPlayers: // StateModifier
+        if ( stdTextTrigArgNum == 0 ) ADD_TEXTTRIG_STATE_MODIFIER(action.type2);
+        break;
+    case ActionId::LeaderboardGoalCtrlAtLoc: // String, Unit, Amount, Location
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_STRING(action.stringNum) break;
+        case 1: ADD_TEXTTRIG_UNIT(action.type) break;
+        case 2: ADD_TEXTTRIG_NUMBER(action.number) break;
+        case 3: ADD_TEXTTRIG_LOCATION(action.location) break;
+        }
+        break;
+    case ActionId::LeaderboardGoalCtrl: // String, Unit, Amount
+    case ActionId::LeaderboardGoalKills: // String, Unit, Amount
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_STRING(action.stringNum) break;
+        case 1: ADD_TEXTTRIG_UNIT(action.type) break;
+        case 2: ADD_TEXTTRIG_NUMBER(action.number) break;
+        }
+        break;
+    case ActionId::LeaderboardGoalPoints: // String, ScoreType, Amount
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_STRING(action.stringNum) break;
+        case 1: ADD_TEXTTRIG_SCORE_TYPE(action.type) break;
+        case 2: ADD_TEXTTRIG_NUMBER(action.number) break;
+        }
+        break;
+    case ActionId::LeaderboardGoalResources: // String, Amount, ResourceType
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_STRING(action.stringNum) break;
+        case 1: ADD_TEXTTRIG_NUMBER(action.number) break;
+        case 2: ADD_TEXTTRIG_RESOURCE_TYPE(action.type) break;
+        }
+        break;
+    case ActionId::ModifyUnitEnergy: // Player, Unit, Amount, NumUnits, Location
+    case ActionId::ModifyUnitHangerCount: // Player, Unit, Amount, NumUnits, Location
+    case ActionId::ModifyUnitHitpoints: // Player, Unit, Amount, NumUnits, Location
+    case ActionId::ModifyUnitShieldPoints: // Player, Unit, Amount, NumUnits, Location
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
+        case 1: ADD_TEXTTRIG_UNIT(action.type) break;
+        case 2: ADD_TEXTTRIG_NUMBER(action.number) break;
+        case 3: ADD_TEXTTRIG_NUM_UNITS(action.type2) break;
+        case 4: ADD_TEXTTRIG_LOCATION(action.location) break;
+        }
+        break;
+    case ActionId::ModifyUnitResourceAmount: // Player, Amount, NumUnits, Location
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
+        case 1: ADD_TEXTTRIG_NUMBER(action.number) break;
+        case 2: ADD_TEXTTRIG_NUM_UNITS(action.type2) break;
+        case 3: ADD_TEXTTRIG_LOCATION(action.location) break;
+        }
+        break;
+    case ActionId::MoveLocation: // Player, Unit, LocDest, Location
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
+        case 1: ADD_TEXTTRIG_UNIT(action.type) break;
+        case 2: ADD_TEXTTRIG_LOCATION(action.location) break;
+        case 3: ADD_TEXTTRIG_LOCATION(action.number) break;
+        }
+        break;
+    case ActionId::MoveUnit: // Player, Unit, NumUnits, Location, LocDest
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
+        case 1: ADD_TEXTTRIG_UNIT(action.type) break;
+        case 2: ADD_TEXTTRIG_NUM_UNITS(action.type2) break;
+        case 3: ADD_TEXTTRIG_LOCATION(action.location) break;
+        case 4: ADD_TEXTTRIG_LOCATION(action.number) break;
+        }
+        break;
+    case ActionId::Order: // Player, Unit, Location, LocDest, OrderType
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
+        case 1: ADD_TEXTTRIG_UNIT(action.type) break;
+        case 2: ADD_TEXTTRIG_LOCATION(action.location) break;
+        case 3: ADD_TEXTTRIG_LOCATION(action.number) break;
+        case 4: ADD_TEXTTRIG_ORDER(action.type2) break;
+        }
+        break;
+    case ActionId::PlayWav: // Wav, Duration
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_WAV(action.wavID) break;
+        case 1: ADD_TEXTTRIG_NUMBER(action.time) break;
+        }
+        break;
+    case ActionId::RemoveUnitAtLocation: // Player, Unit, NumUnits, Location
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
+        case 1: ADD_TEXTTRIG_UNIT(action.type) break;
+        case 2: ADD_TEXTTRIG_NUM_UNITS(action.type2) break;
+        case 3: ADD_TEXTTRIG_LOCATION(action.location) break;
+        }
+        break;
+    case ActionId::RunAiScript: // Script
+        if ( stdTextTrigArgNum == 0 ) ADD_TEXTTRIG_SCRIPT(action.number)
             break;
-        case ActionId::CreateUnit: // Player, Unit, Number (NumUnits w/o 'All'), Location
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
-                case 1: ADD_TEXTTRIG_UNIT(action.type) break;
-                case 2: ADD_TEXTTRIG_NUMBER(action.type2) break;
-                case 3: ADD_TEXTTRIG_LOCATION(action.location) break;
-            }
-            break;
-        case ActionId::CreateUnitWithProperties: // Player, Unit, Number (NumUnits w/o 'All'), Location, Properties
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
-                case 1: ADD_TEXTTRIG_UNIT(action.type) break;
-                case 2: ADD_TEXTTRIG_NUMBER(action.type2) break;
-                case 3: ADD_TEXTTRIG_LOCATION(action.location) break;
-                case 4: ADD_TEXTTRIG_NUMBER(action.number) break;
-            }
-            break;
-        case ActionId::DisplayTextMessage: // TextFlags, String
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_TEXT_FLAGS(action.flags) break;
-                case 1: ADD_TEXTTRIG_STRING(action.stringNum) break;
-            }
-            break;
-        case ActionId::GiveUnitsToPlayer: // Player, SecondPlayer, Unit, NumUnits, Location
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
-                case 1: ADD_TEXTTRIG_PLAYER(action.number) break;
-                case 2: ADD_TEXTTRIG_UNIT(action.type) break;
-                case 3: ADD_TEXTTRIG_NUM_UNITS(action.type2) break;
-                case 4: ADD_TEXTTRIG_LOCATION(action.location) break;
-            }
-            break;
-        case ActionId::KillUnit:   // Player, Unit
-        case ActionId::RemoveUnit: // Player, Unit
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
-                case 1: ADD_TEXTTRIG_UNIT(action.type) break;
-            }
-            break;
-        case ActionId::LeaderboardCtrlAtLoc: // String, Unit, Location
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_STRING(action.stringNum) break;
-                case 1: ADD_TEXTTRIG_UNIT(action.type) break;
-                case 2: ADD_TEXTTRIG_LOCATION(action.location) break;
-            }
-            break;
-        case ActionId::LeaderboardCtrl: // String, Unit
-        case ActionId::LeaderboardKills: // String, Unit
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_STRING(action.stringNum) break;
-                case 1: ADD_TEXTTRIG_UNIT(action.type) break;
-            }
-            break;
-        case ActionId::LeaderboardGreed: // Amount
-            if ( stdTextTrigArgNum == 0 ) ADD_TEXTTRIG_NUMBER(action.number);
-            break;
-        case ActionId::LeaderboardPoints: // String, ScoreType
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_STRING(action.stringNum) break;
-                case 1: ADD_TEXTTRIG_SCORE_TYPE(action.type) break;
-            }
-            break;
-        case ActionId::LeaderboardResources: // String, ResourceType
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_STRING(action.stringNum) break;
-                case 1: ADD_TEXTTRIG_RESOURCE_TYPE(action.type) break;
-            }
-            break;
-        case ActionId::LeaderboardCompPlayers: // StateModifier
-            if ( stdTextTrigArgNum == 0 ) ADD_TEXTTRIG_STATE_MODIFIER(action.type2);
-            break;
-        case ActionId::LeaderboardGoalCtrlAtLoc: // String, Unit, Amount, Location
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_STRING(action.stringNum) break;
-                case 1: ADD_TEXTTRIG_UNIT(action.type) break;
-                case 2: ADD_TEXTTRIG_NUMBER(action.number) break;
-                case 3: ADD_TEXTTRIG_LOCATION(action.location) break;
-            }
-            break;
-        case ActionId::LeaderboardGoalCtrl: // String, Unit, Amount
-        case ActionId::LeaderboardGoalKills: // String, Unit, Amount
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_STRING(action.stringNum) break;
-                case 1: ADD_TEXTTRIG_UNIT(action.type) break;
-                case 2: ADD_TEXTTRIG_NUMBER(action.number) break;
-            }
-            break;
-        case ActionId::LeaderboardGoalPoints: // String, ScoreType, Amount
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_STRING(action.stringNum) break;
-                case 1: ADD_TEXTTRIG_SCORE_TYPE(action.type) break;
-                case 2: ADD_TEXTTRIG_NUMBER(action.number) break;
-            }
-            break;
-        case ActionId::LeaderboardGoalResources: // String, Amount, ResourceType
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_STRING(action.stringNum) break;
-                case 1: ADD_TEXTTRIG_NUMBER(action.number) break;
-                case 2: ADD_TEXTTRIG_RESOURCE_TYPE(action.type) break;
-            }
-            break;
-        case ActionId::ModifyUnitEnergy: // Player, Unit, Amount, NumUnits, Location
-        case ActionId::ModifyUnitHangerCount: // Player, Unit, Amount, NumUnits, Location
-        case ActionId::ModifyUnitHitpoints: // Player, Unit, Amount, NumUnits, Location
-        case ActionId::ModifyUnitShieldPoints: // Player, Unit, Amount, NumUnits, Location
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
-                case 1: ADD_TEXTTRIG_UNIT(action.type) break;
-                case 2: ADD_TEXTTRIG_NUMBER(action.number) break;
-                case 3: ADD_TEXTTRIG_NUM_UNITS(action.type2) break;
-                case 4: ADD_TEXTTRIG_LOCATION(action.location) break;
-            }
-            break;
-        case ActionId::ModifyUnitResourceAmount: // Player, Amount, NumUnits, Location
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
-                case 1: ADD_TEXTTRIG_NUMBER(action.number) break;
-                case 2: ADD_TEXTTRIG_NUM_UNITS(action.type2) break;
-                case 3: ADD_TEXTTRIG_LOCATION(action.location) break;
-            }
-            break;
-        case ActionId::MoveLocation: // Player, Unit, LocDest, Location
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
-                case 1: ADD_TEXTTRIG_UNIT(action.type) break;
-                case 2: ADD_TEXTTRIG_LOCATION(action.location) break;
-                case 3: ADD_TEXTTRIG_LOCATION(action.number) break;
-            }
-            break;
-        case ActionId::MoveUnit: // Player, Unit, NumUnits, Location, LocDest
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
-                case 1: ADD_TEXTTRIG_UNIT(action.type) break;
-                case 2: ADD_TEXTTRIG_NUM_UNITS(action.type2) break;
-                case 3: ADD_TEXTTRIG_LOCATION(action.location) break;
-                case 4: ADD_TEXTTRIG_LOCATION(action.number) break;
-            }
-            break;
-        case ActionId::Order: // Player, Unit, Location, LocDest, OrderType
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
-                case 1: ADD_TEXTTRIG_UNIT(action.type) break;
-                case 2: ADD_TEXTTRIG_LOCATION(action.location) break;
-                case 3: ADD_TEXTTRIG_LOCATION(action.number) break;
-                case 4: ADD_TEXTTRIG_ORDER(action.type2) break;
-            }
-            break;
-        case ActionId::PlayWav: // Wav, Duration
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_WAV(action.wavID) break;
-                case 1: ADD_TEXTTRIG_NUMBER(action.time) break;
-            }
-            break;
-        case ActionId::RemoveUnitAtLocation: // Player, Unit, NumUnits, Location
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
-                case 1: ADD_TEXTTRIG_UNIT(action.type) break;
-                case 2: ADD_TEXTTRIG_NUM_UNITS(action.type2) break;
-                case 3: ADD_TEXTTRIG_LOCATION(action.location) break;
-            }
-            break;
-        case ActionId::RunAiScript: // Script
-            if ( stdTextTrigArgNum == 0 ) ADD_TEXTTRIG_SCRIPT(action.number)
-            break;
-        case ActionId::RunAiScriptAtLocation: // Script, Location
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_SCRIPT(action.number) break;
-                case 1: ADD_TEXTTRIG_LOCATION(action.location) break;
-            }
-            break;
-        case ActionId::SetAllianceStatus: // Player, AllyState
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
-                case 1: ADD_TEXTTRIG_ALLY_STATE(action.type) break;
-            }
-            break;
-        case ActionId::SetCountdownTimer: // NumericModifier, Amount
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_NUMERIC_MODIFIER(action.type2) break;
-                case 1: ADD_TEXTTRIG_NUMBER(action.time) break;
-            }
-            break;
-        case ActionId::SetDeaths: // Player, Unit, NumericModifier, Amount
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
-                case 1: ADD_TEXTTRIG_UNIT(action.type) break;
-                case 2: ADD_TEXTTRIG_NUMERIC_MODIFIER(action.type2) break;
-                case 3: ADD_TEXTTRIG_NUMBER(action.number) break;
-            }
-            break;
-        case ActionId::SetDoodadState:   // Player, Unit, Location, StateMod
-        case ActionId::SetInvincibility: // Player, Unit, Location, StateMod
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
-                case 1: ADD_TEXTTRIG_UNIT(action.type) break;
-                case 2: ADD_TEXTTRIG_LOCATION(action.location) break;
-                case 3: ADD_TEXTTRIG_STATE_MODIFIER(action.type2) break;
-            }
-            break;
-        case ActionId::SetResources: // Player, NumericModifier, Amount, ResourceType
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
-                case 1: ADD_TEXTTRIG_NUMERIC_MODIFIER(action.type2) break;
-                case 2: ADD_TEXTTRIG_NUMBER(action.number) break;
-                case 3: ADD_TEXTTRIG_RESOURCE_TYPE(action.type) break;
-            }
-            break;
-        case ActionId::SetScore: // Player, NumericModifier, Amount, ScoreType
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
-                case 1: ADD_TEXTTRIG_NUMERIC_MODIFIER(action.type2) break;
-                case 2: ADD_TEXTTRIG_NUMBER(action.number) break;
-                case 3: ADD_TEXTTRIG_SCORE_TYPE(action.type) break;
-            }
-            break;
-        case ActionId::SetSwitch: // Switch, SwitchMod
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_SWITCH(action.number) break;
-                case 1: ADD_TEXTTRIG_SWITCH_MODIFIER(action.type2) break;
-            }
-            break;
-        case ActionId::TalkingPortrait: // Unit, Duration
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_UNIT(action.type) break;
-                case 1: ADD_TEXTTRIG_NUMBER(action.time) break;
-            }
-            break;
-        case ActionId::Transmission: // TextFlags, String, Unit, Location, NumericModifier, DurationMod, Wav, Duration
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_TEXT_FLAGS(action.flags) break;
-                case 1: ADD_TEXTTRIG_STRING(action.stringNum) break;
-                case 2: ADD_TEXTTRIG_UNIT(action.type) break;
-                case 3: ADD_TEXTTRIG_LOCATION(action.location) break;
-                case 4: ADD_TEXTTRIG_NUMERIC_MODIFIER(action.type2) break;
-                case 5: ADD_TEXTTRIG_NUMBER(action.number) break;
-                case 6: ADD_TEXTTRIG_WAV(action.wavID) break;
-                case 7: ADD_TEXTTRIG_NUMBER(action.time) break;
-            }
-            break;
-        case ActionId::Wait: // Duration
-            if ( stdTextTrigArgNum == 0 ) ADD_TEXTTRIG_NUMBER(action.time);
-            break;
-        default: // Location, String, Wav, Duration, Player, Number, Type, Action, Type2, Flags, Internal
-            switch ( stdTextTrigArgNum ) {
-                case 0: ADD_TEXTTRIG_LOCATION(action.location) break;
-                case 1: ADD_TEXTTRIG_STRING(action.stringNum) break;
-                case 2: ADD_TEXTTRIG_WAV(action.wavID) break;
-                case 3: ADD_TEXTTRIG_NUMBER(action.time) break;
-                case 4: ADD_TEXTTRIG_PLAYER(action.group) break;
-                case 5: ADD_TEXTTRIG_NUMBER(action.number) break;
-                case 6: ADD_TEXTTRIG_NUMBER(action.type) break;
-                case 7: ADD_TEXTTRIG_NUMBER(action.action) break;
-                case 8: ADD_TEXTTRIG_NUMBER(action.type2) break;
-                case 9: ADD_TEXTTRIG_NUMBER(action.flags) break;
-                case 10: ADD_TEXTTRIG_NUMBER(TripletToInt(&action.internalData[0])) break;
-            }
-            break;
+    case ActionId::RunAiScriptAtLocation: // Script, Location
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_SCRIPT(action.number) break;
+        case 1: ADD_TEXTTRIG_LOCATION(action.location) break;
+        }
+        break;
+    case ActionId::SetAllianceStatus: // Player, AllyState
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
+        case 1: ADD_TEXTTRIG_ALLY_STATE(action.type) break;
+        }
+        break;
+    case ActionId::SetCountdownTimer: // NumericModifier, Amount
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_NUMERIC_MODIFIER(action.type2) break;
+        case 1: ADD_TEXTTRIG_NUMBER(action.time) break;
+        }
+        break;
+    case ActionId::SetDeaths: // Player, Unit, NumericModifier, Amount
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
+        case 1: ADD_TEXTTRIG_UNIT(action.type) break;
+        case 2: ADD_TEXTTRIG_NUMERIC_MODIFIER(action.type2) break;
+        case 3: ADD_TEXTTRIG_NUMBER(action.number) break;
+        }
+        break;
+    case ActionId::SetDoodadState:   // Player, Unit, Location, StateMod
+    case ActionId::SetInvincibility: // Player, Unit, Location, StateMod
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
+        case 1: ADD_TEXTTRIG_UNIT(action.type) break;
+        case 2: ADD_TEXTTRIG_LOCATION(action.location) break;
+        case 3: ADD_TEXTTRIG_STATE_MODIFIER(action.type2) break;
+        }
+        break;
+    case ActionId::SetResources: // Player, NumericModifier, Amount, ResourceType
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
+        case 1: ADD_TEXTTRIG_NUMERIC_MODIFIER(action.type2) break;
+        case 2: ADD_TEXTTRIG_NUMBER(action.number) break;
+        case 3: ADD_TEXTTRIG_RESOURCE_TYPE(action.type) break;
+        }
+        break;
+    case ActionId::SetScore: // Player, NumericModifier, Amount, ScoreType
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_PLAYER(action.group) break;
+        case 1: ADD_TEXTTRIG_NUMERIC_MODIFIER(action.type2) break;
+        case 2: ADD_TEXTTRIG_NUMBER(action.number) break;
+        case 3: ADD_TEXTTRIG_SCORE_TYPE(action.type) break;
+        }
+        break;
+    case ActionId::SetSwitch: // Switch, SwitchMod
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_SWITCH(action.number) break;
+        case 1: ADD_TEXTTRIG_SWITCH_MODIFIER(action.type2) break;
+        }
+        break;
+    case ActionId::TalkingPortrait: // Unit, Duration
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_UNIT(action.type) break;
+        case 1: ADD_TEXTTRIG_NUMBER(action.time) break;
+        }
+        break;
+    case ActionId::Transmission: // TextFlags, String, Unit, Location, NumericModifier, DurationMod, Wav, Duration
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_TEXT_FLAGS(action.flags) break;
+        case 1: ADD_TEXTTRIG_STRING(action.stringNum) break;
+        case 2: ADD_TEXTTRIG_UNIT(action.type) break;
+        case 3: ADD_TEXTTRIG_LOCATION(action.location) break;
+        case 4: ADD_TEXTTRIG_NUMERIC_MODIFIER(action.type2) break;
+        case 5: ADD_TEXTTRIG_NUMBER(action.number) break;
+        case 6: ADD_TEXTTRIG_WAV(action.wavID) break;
+        case 7: ADD_TEXTTRIG_NUMBER(action.time) break;
+        }
+        break;
+    case ActionId::Wait: // Duration
+        if ( stdTextTrigArgNum == 0 ) ADD_TEXTTRIG_NUMBER(action.time);
+        break;
+    case ActionId::SetMemory: // MemOffset, NumericModifier, Amount
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_MEMORY(action.group) break;
+        case 1: ADD_TEXTTRIG_NUMERIC_MODIFIER(action.type2) break;
+        case 2: ADD_TEXTTRIG_NUMBER(action.number) break;
+        }
+        break;
+    default: // Location, String, Wav, Duration, Player, Number, Type, Action, Type2, Flags, Internal
+        switch ( stdTextTrigArgNum ) {
+        case 0: ADD_TEXTTRIG_LOCATION(action.location) break;
+        case 1: ADD_TEXTTRIG_STRING(action.stringNum) break;
+        case 2: ADD_TEXTTRIG_WAV(action.wavID) break;
+        case 3: ADD_TEXTTRIG_NUMBER(action.time) break;
+        case 4: ADD_TEXTTRIG_PLAYER(action.group) break;
+        case 5: ADD_TEXTTRIG_NUMBER(action.number) break;
+        case 6: ADD_TEXTTRIG_NUMBER(action.type) break;
+        case 7: ADD_TEXTTRIG_NUMBER(action.action) break;
+        case 8: ADD_TEXTTRIG_NUMBER(action.type2) break;
+        case 9: ADD_TEXTTRIG_NUMBER(action.flags) break;
+        case 10: ADD_TEXTTRIG_NUMBER(TripletToInt(&action.internalData[0])) break;
+        }
+        break;
     }
 }
 
@@ -809,15 +823,15 @@ bool TextTrigGenerator::BuildTextTrigs(ScenarioPtr map, TrigSegment trigData, st
     int numArgs;
 
     const u8 conditionNumArgs[] = { 0, 2, 4, 5, 4, 4, 1, 2, 1, 1,
-                                    1, 2, 2, 0, 3, 4, 1, 2, 1, 1,
-                                    1, 4, 0, 0 };
+        1, 2, 2, 0, 3, 4, 1, 2, 1, 1,
+        1, 4, 0, 0 };
 
     const u8 actionNumArgs[] = { 0, 0, 0, 0, 1, 0, 0, 8, 2, 2,
-                                 1, 5, 1, 2, 2, 1, 2, 2, 3, 2,
-                                 2, 2, 2, 4, 2, 4, 4, 4, 1, 2,
-                                 0, 0, 1, 3, 4, 3, 3, 3, 4, 5,
-                                 1, 1, 4, 4, 4, 4, 5, 1, 5, 5,
-                                 5, 5, 4, 5, 0, 0, 0, 2, 0, 0 };
+        1, 5, 1, 2, 2, 1, 2, 2, 3, 2,
+        2, 2, 2, 4, 2, 4, 4, 4, 1, 2,
+        0, 0, 1, 3, 4, 3, 3, 3, 4, 5,
+        1, 1, 4, 4, 4, 4, 5, 1, 5, 5,
+        5, 5, 4, 5, 0, 0, 0, 2, 0, 0 };
 
     for ( u32 trigNum=0; trigNum<numTrigs; trigNum++ )
     {
@@ -917,14 +931,21 @@ bool TextTrigGenerator::BuildTextTrigs(ScenarioPtr map, TrigSegment trigData, st
                         output.addStr("\n\t", 2);
 
                     // Add action name
-                    if ( (s32)AID < (s32)actionTable.size() )
+                    if ( AID == ActionId::SetDeaths && action.group > 28 ) // Memory action
+                        output.addStr("Set Memory", 10);
+                    else if ( (s32)AID < (s32)actionTable.size() )
                         output.addStr(actionTable[(s32)AID].c_str(), actionTable[(s32)AID].size());
                     else
                         output.addStr("Custom", 6);
 
                     output.add<char>('(');
                     // Add action args
-                    if ( (s32)AID < sizeof(actionNumArgs) )
+                    if ( AID == ActionId::SetDeaths && action.group > 28 ) // Memory action
+                    {
+                        AID = ActionId::SetMemory;
+                        numArgs = 3;
+                    }
+                    else if ( (s32)AID < sizeof(actionNumArgs) )
                         numArgs = actionNumArgs[(s32)AID];
                     else
                         numArgs = 11; // custom
@@ -980,14 +1001,14 @@ std::string TextTrigGenerator::GetTrigTextFlags(u8 textFlags)
 bool TextTrigGenerator::LoadScenario(ScenarioPtr map, bool quoteArgs, bool useCustomNames)
 {
     return map != nullptr &&
-           PrepConditionTable() &&
-           PrepActionTable() &&
-           PrepLocationTable(map, quoteArgs) &&
-           PrepUnitTable(map, quoteArgs, useCustomNames) &&
-           PrepSwitchTable(map, quoteArgs) &&
-           PrepGroupTable(map, quoteArgs) &&
-           PrepScriptTable(map, quoteArgs) &&
-           PrepStringTable(map, quoteArgs);
+        PrepConditionTable() &&
+        PrepActionTable() &&
+        PrepLocationTable(map, quoteArgs) &&
+        PrepUnitTable(map, quoteArgs, useCustomNames) &&
+        PrepSwitchTable(map, quoteArgs) &&
+        PrepGroupTable(map, quoteArgs) &&
+        PrepScriptTable(map, quoteArgs) &&
+        PrepStringTable(map, quoteArgs);
 }
 
 bool TextTrigGenerator::CorrectLineEndings(buffer& buf)
@@ -1002,20 +1023,20 @@ bool TextTrigGenerator::CorrectLineEndings(buffer& buf)
         curr = buf.get<u8>(pos);
         switch ( curr )
         {
-            case '\15': // CR (line ending)
-                if ( buf.get<u8>(pos+1) == '\12' ) // Has LF
-                    pos ++;
-            case '\12': // LF (line ending)
-            case '\13': // VT (line ending)
-            case '\14': // FF (line ending)
-                dest.add<u8>('\15');
-                dest.add<u8>('\12');
+        case '\15': // CR (line ending)
+            if ( buf.get<u8>(pos+1) == '\12' ) // Has LF
                 pos ++;
-                break;
-            default:
-                dest.add<u8>(curr);
-                pos ++;
-                break;
+        case '\12': // LF (line ending)
+        case '\13': // VT (line ending)
+        case '\14': // FF (line ending)
+            dest.add<u8>('\15');
+            dest.add<u8>('\12');
+            pos ++;
+            break;
+        default:
+            dest.add<u8>(curr);
+            pos ++;
+            break;
         }
 
     }
@@ -1032,9 +1053,9 @@ bool TextTrigGenerator::PrepConditionTable()
         return true;
 
     const char* legacyConditionNames[] = { "Always", "Countdown Timer", "Command", "Bring", "Accumulate", "Kill", "Command the Most", 
-                                           "Commands the Most At", "Most Kills", "Highest Score", "Most Resources", "Switch", "Elapsed Time", 
-                                           "Never", "Opponents", "Deaths", "Command the Least", "Command the Least At", "Least Kills", 
-                                           "Lowest Score", "Least Resources", "Score", "Always", "Never" };
+        "Commands the Most At", "Most Kills", "Highest Score", "Most Resources", "Switch", "Elapsed Time", 
+        "Never", "Opponents", "Deaths", "Command the Least", "Command the Least At", "Least Kills", 
+        "Lowest Score", "Least Resources", "Score", "Always", "Never" };
 
     const char** conditionNames = legacyConditionNames;
 
@@ -1055,17 +1076,17 @@ bool TextTrigGenerator::PrepActionTable()
         return true;
 
     const char* legacyActionNames[] = { "No Action", "Victory", "Defeat", "Preserve Trigger", "Wait", "Pause Game", "Unpause Game", "Transmission", 
-                                        "Play WAV", "Display Text Message", "Center View", "Create Unit with Properties", "Set Mission Objectives", 
-                                        "Set Switch", "Set Countdown Timer", "Run AI Script", "Run AI Script At Location", "Leader Board Control", 
-                                        "Leader Board Control At Location","Leader Board Resources", "Leader Board Kills", "Leader Board Points", 
-                                        "Kill Unit", "Kill Unit At Location", "Remove Unit", "Remove Unit At Location", "Set Resources", "Set Score", 
-                                        "Minimap Ping", "Talking Portrait", "Mute Unit Speech", "Unmute Unit Speech", "Leaderboard Computer Players", 
-                                        "Leaderboard Goal Control", "Leaderboard Goal Control At Location", "Leaderboard Goal Resources", 
-                                        "Leaderboard Goal Kills", "Leaderboard Goal Points", "Move Location", "Move Unit", "Leaderboard Greed", 
-                                        "Set Next Scenario", "Set Doodad State", "Set Invincibility", "Create Unit", "Set Deaths", "Order", "Comment", 
-                                        "Give Units to Player", "Modify Unit Hit Points", "Modify Unit Energy", "Modify Unit Shield Points", 
-                                        "Modify Unit Resource Amount", "Modify Unit Hanger Count", "Pause Timer", "Unpause Timer", "Draw", 
-                                        "Set Alliance Status", "Disable Debug Mode", "Enable Debug Mode" };
+        "Play WAV", "Display Text Message", "Center View", "Create Unit with Properties", "Set Mission Objectives", 
+        "Set Switch", "Set Countdown Timer", "Run AI Script", "Run AI Script At Location", "Leader Board Control", 
+        "Leader Board Control At Location","Leader Board Resources", "Leader Board Kills", "Leader Board Points", 
+        "Kill Unit", "Kill Unit At Location", "Remove Unit", "Remove Unit At Location", "Set Resources", "Set Score", 
+        "Minimap Ping", "Talking Portrait", "Mute Unit Speech", "Unmute Unit Speech", "Leaderboard Computer Players", 
+        "Leaderboard Goal Control", "Leaderboard Goal Control At Location", "Leaderboard Goal Resources", 
+        "Leaderboard Goal Kills", "Leaderboard Goal Points", "Move Location", "Move Unit", "Leaderboard Greed", 
+        "Set Next Scenario", "Set Doodad State", "Set Invincibility", "Create Unit", "Set Deaths", "Order", "Comment", 
+        "Give Units to Player", "Modify Unit Hit Points", "Modify Unit Energy", "Modify Unit Shield Points", 
+        "Modify Unit Resource Amount", "Modify Unit Hanger Count", "Pause Timer", "Unpause Timer", "Draw", 
+        "Set Alliance Status", "Disable Debug Mode", "Enable Debug Mode" };
 
     const char** actionNames = legacyActionNames;
 
@@ -1083,7 +1104,7 @@ bool TextTrigGenerator::PrepActionTable()
 bool TextTrigGenerator::PrepLocationTable(ScenarioPtr map, bool quoteArgs)
 {
     locationTable.clear();
-    
+
     ChkLocation* loc;
     ChkdString locationName(true);
 
@@ -1168,8 +1189,8 @@ bool TextTrigGenerator::PrepSwitchTable(ScenarioPtr map, bool quoteArgs)
         for ( u32 switchID=0; switchID<256; switchID++ )
         {
             if ( map->getSwitchStrId((u8)switchID, stringID) &&
-                 stringID > 0 &&
-                 map->GetString(switchName, stringID) )
+                stringID > 0 &&
+                map->GetString(switchName, stringID) )
             {
                 if ( quoteArgs )
                     switchTable.push_back( "\"" + switchName + "\"" );
@@ -1203,11 +1224,11 @@ bool TextTrigGenerator::PrepGroupTable(ScenarioPtr map, bool quoteArgs)
     if ( quoteArgs )
     {
         const char* legacyLowerGroups[] = { "\"Player 1\"", "\"Player 2\"", "\"Player 3\"", "\"Player 4\"", "\"Player 5\"", "\"Player 6\"",
-                                            "\"Player 7\"", "\"Player 8\"", "\"Player 9\"", "\"Player 10\"", "\"Player 11\"", "\"Player 12\"",
-                                            "\"unknown/unused\"", "\"Current Player\"", "\"Foes\"", "\"Allies\"", "\"Neutral Players\"",
-                                            "\"All players\"" };
+            "\"Player 7\"", "\"Player 8\"", "\"Player 9\"", "\"Player 10\"", "\"Player 11\"", "\"Player 12\"",
+            "\"unknown/unused\"", "\"Current Player\"", "\"Foes\"", "\"Allies\"", "\"Neutral Players\"",
+            "\"All players\"" };
         const char* legacyUpperGroups[] = { "\"unknown/unused\"", "\"unknown/unused\"", "\"unknown/unused\"", "\"unknown/unused\"",
-                                            "\"Non Allied Victory Players\"", "\"unknown/unused\"" };
+            "\"Non Allied Victory Players\"", "\"unknown/unused\"" };
 
         legacyLowerGroupNames = legacyLowerGroups;
         legacyUpperGroupNames = legacyUpperGroups;
@@ -1215,11 +1236,11 @@ bool TextTrigGenerator::PrepGroupTable(ScenarioPtr map, bool quoteArgs)
     else
     {
         const char* legacyLowerGroups[] = { "Player 1", "Player 2", "Player 3", "Player 4", "Player 5", "Player 6",
-                                            "Player 7", "Player 8", "Player 9", "Player 10", "Player 11", "Player 12",
-                                            "unknown/unused", "Current Player", "Foes", "Allies", "Neutral Players",
-                                            "All players" };
+            "Player 7", "Player 8", "Player 9", "Player 10", "Player 11", "Player 12",
+            "unknown/unused", "Current Player", "Foes", "Allies", "Neutral Players",
+            "All players" };
         const char* legacyUpperGroups[] = { "unknown/unused", "unknown/unused", "unknown/unused", "unknown/unused",
-                                            "Non Allied Victory Players", "unknown/unused" };
+            "Non Allied Victory Players", "unknown/unused" };
 
         legacyLowerGroupNames = legacyLowerGroups;
         legacyUpperGroupNames = legacyUpperGroups;

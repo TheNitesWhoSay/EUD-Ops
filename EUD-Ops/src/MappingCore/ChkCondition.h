@@ -7,32 +7,32 @@ enum class ConditionId;
 
 class Condition // 20 bytes, A trigger condition, as found in sets of 16 in a Trigger
 {
-    public:
-        u32 locationNum; // 1 based
-        u32 players;
-        u32 amount;
-        u16 unitID;
-        u8 comparison;
-        u8 condition;
-        u8 typeIndex; // Resource type/score type/switch num
-        u8 flags;
-        u16 internalData; // Number of which condition to process next?
+public:
+    u32 locationNum; // 1 based
+    u32 players;
+    u32 amount;
+    u16 unitID;
+    u8 comparison;
+    u8 condition;
+    u8 typeIndex; // Resource type/score type/switch num
+    u8 flags;
+    u16 internalData; // Number of which condition to process next?
 
-        enum Flags
-        {
-            Unknown_0 = BIT_0, Disabled = BIT_1, AlwaysDisplay = BIT_2, UnitPropertiesUsed = BIT_3,
-            UnitTypeUsed = BIT_4 /* Possibly Unnecessary */, UnitIdUsed = BIT_5, /* Probably Unnecessary */
-            Unknown_6 = BIT_6, Unknown_7 = BIT_7,
-            xDisabled = x8BIT_1,
-        };
+    enum Flags
+    {
+        Unknown_0 = BIT_0, Disabled = BIT_1, AlwaysDisplay = BIT_2, UnitPropertiesUsed = BIT_3,
+        UnitTypeUsed = BIT_4 /* Possibly Unnecessary */, UnitIdUsed = BIT_5, /* Probably Unnecessary */
+        Unknown_6 = BIT_6, Unknown_7 = BIT_7,
+        xDisabled = x8BIT_1,
+    };
 
-        Condition();
-        Condition(u8 condition);
-        Condition(ConditionId condition);
-        void ToggleDisabled();
-        bool isDisabled();
-        static ConditionArgType TextTrigArgType(u8 argNum, ConditionId condition);
-        ConditionArgType TextTrigArgType(u8 argNum);
+    Condition();
+    Condition(u8 condition);
+    Condition(ConditionId condition);
+    void ToggleDisabled();
+    bool isDisabled();
+    static ConditionArgType TextTrigArgType(u8 argNum, ConditionId condition);
+    ConditionArgType TextTrigArgType(u8 argNum);
 };
 
 enum class ConditionArgType

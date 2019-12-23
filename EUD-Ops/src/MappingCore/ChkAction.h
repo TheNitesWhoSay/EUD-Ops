@@ -7,31 +7,31 @@ enum class ActionId;
 
 class Action // A trigger action, as found in sets of 64 in a Trigger
 {
-    public:
-        u32 location; // 1 based
-        u32 stringNum;
-        u32 wavID;
-        u32 time;
-        u32 group;
-        u32 number; // Amount/Group2/LocDest/UnitPropNum/ScriptNum
-        u16 type; // Unit/score/resource type/alliance status
-        u8 action;
-        u8 type2; // Num units (0 for all)/switch action/unit order/modify type
-        u8 flags;
-        u8 internalData[3]; // Number of actions to process next?
-        
-        enum Flags {
-            Unknown_0 = BIT_0, Disabled = BIT_1, AlwaysDisplay = BIT_2, UnitPropertiesUsed = BIT_3,
-            UnitTypeUsed = BIT_4, UnitIdUsed = BIT_5 /* Probably Unnecessary*/, Unknown_6 = BIT_6, Unknown_7 = BIT_7,
-            xAlwaysDisplay = x8BIT_2, xDisabled = x8BIT_1
-        };
+public:
+    u32 location; // 1 based
+    u32 stringNum;
+    u32 wavID;
+    u32 time;
+    u32 group;
+    u32 number; // Amount/Group2/LocDest/UnitPropNum/ScriptNum
+    u16 type; // Unit/score/resource type/alliance status
+    u8 action;
+    u8 type2; // Num units (0 for all)/switch action/unit order/modify type
+    u8 flags;
+    u8 internalData[3]; // Number of actions to process next?
 
-        Action();
-        Action(u8 action);
-        Action(ActionId action);
-        void ToggleDisabled();
-        bool isDisabled();
-        static ActionArgType TextTrigArgType(u8 argNum, ActionId actionId);
+    enum Flags {
+        Unknown_0 = BIT_0, Disabled = BIT_1, AlwaysDisplay = BIT_2, UnitPropertiesUsed = BIT_3,
+        UnitTypeUsed = BIT_4, UnitIdUsed = BIT_5 /* Probably Unnecessary*/, Unknown_6 = BIT_6, Unknown_7 = BIT_7,
+        xAlwaysDisplay = x8BIT_2, xDisabled = x8BIT_1
+    };
+
+    Action();
+    Action(u8 action);
+    Action(ActionId action);
+    void ToggleDisabled();
+    bool isDisabled();
+    static ActionArgType TextTrigArgType(u8 argNum, ActionId actionId);
 };
 
 enum class ActionArgType
@@ -129,12 +129,12 @@ enum class ActionId : s32
     Wait = 4,
 
     Custom = -1,
-    Memory = -2
+    SetMemory = -2
 };
 
 enum class ExtendedActionBase : s32
 {
-    Memory = (u8)ActionId::SetDeaths,
+    SetMemory = (u8)ActionId::SetDeaths,
 };
 
 #endif

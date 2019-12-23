@@ -28,7 +28,7 @@
     <Filter Include="Header Files\Mapping Core">
       <UniqueIdentifier>{59bf0760-5448-4b2c-9473-298a8873eb75}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Mappung Core">
+    <Filter Include="Source Files\Mapping Core">
       <UniqueIdentifier>{0743f15b-f309-4861-bd03-0b70cd166e46}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -357,70 +357,73 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\MappingCore\Basics.cpp">
-      <Filter>Source Files\Mappung Core</Filter>
+      <Filter>Source Files\Mapping Core</Filter>
     </ClCompile>
     <ClCompile Include="src\MappingCore\Buffer.cpp">
-      <Filter>Source Files\Mappung Core</Filter>
+      <Filter>Source Files\Mapping Core</Filter>
     </ClCompile>
     <ClCompile Include="src\MappingCore\ChkAction.cpp">
-      <Filter>Source Files\Mappung Core</Filter>
+      <Filter>Source Files\Mapping Core</Filter>
     </ClCompile>
     <ClCompile Include="src\MappingCore\ChkCondition.cpp">
-      <Filter>Source Files\Mappung Core</Filter>
+      <Filter>Source Files\Mapping Core</Filter>
     </ClCompile>
     <ClCompile Include="src\MappingCore\ChkCuwp.cpp">
-      <Filter>Source Files\Mappung Core</Filter>
+      <Filter>Source Files\Mapping Core</Filter>
     </ClCompile>
     <ClCompile Include="src\MappingCore\ChkDoodad.cpp">
-      <Filter>Source Files\Mappung Core</Filter>
+      <Filter>Source Files\Mapping Core</Filter>
     </ClCompile>
     <ClCompile Include="src\MappingCore\ChkLocation.cpp">
-      <Filter>Source Files\Mappung Core</Filter>
+      <Filter>Source Files\Mapping Core</Filter>
     </ClCompile>
     <ClCompile Include="src\MappingCore\ChkSprite.cpp">
-      <Filter>Source Files\Mappung Core</Filter>
+      <Filter>Source Files\Mapping Core</Filter>
     </ClCompile>
     <ClCompile Include="src\MappingCore\ChkTrigger.cpp">
-      <Filter>Source Files\Mappung Core</Filter>
+      <Filter>Source Files\Mapping Core</Filter>
     </ClCompile>
     <ClCompile Include="src\MappingCore\ChkUnit.cpp">
-      <Filter>Source Files\Mappung Core</Filter>
+      <Filter>Source Files\Mapping Core</Filter>
     </ClCompile>
     <ClCompile Include="src\MappingCore\DefaultCHK.cpp">
-      <Filter>Source Files\Mappung Core</Filter>
+      <Filter>Source Files\Mapping Core</Filter>
     </ClCompile>
     <ClCompile Include="src\MappingCore\EscapeStrings.cpp">
-      <Filter>Source Files\Mappung Core</Filter>
+      <Filter>Source Files\Mapping Core</Filter>
     </ClCompile>
     <ClCompile Include="src\MappingCore\FileIO.cpp">
-      <Filter>Source Files\Mappung Core</Filter>
+      <Filter>Source Files\Mapping Core</Filter>
     </ClCompile>
     <ClCompile Include="src\MappingCore\MapFile.cpp">
-      <Filter>Source Files\Mappung Core</Filter>
+      <Filter>Source Files\Mapping Core</Filter>
     </ClCompile>
     <ClCompile Include="src\MappingCore\Math.cpp">
-      <Filter>Source Files\Mappung Core</Filter>
+      <Filter>Source Files\Mapping Core</Filter>
     </ClCompile>
     <ClCompile Include="src\MappingCore\ModifiedAsset.cpp">
-      <Filter>Source Files\Mappung Core</Filter>
+      <Filter>Source Files\Mapping Core</Filter>
     </ClCompile>
     <ClCompile Include="src\MappingCore\Scenario.cpp">
-      <Filter>Source Files\Mappung Core</Filter>
+      <Filter>Source Files\Mapping Core</Filter>
     </ClCompile>
     <ClCompile Include="src\MappingCore\sha256.cpp">
-      <Filter>Source Files\Mappung Core</Filter>
+      <Filter>Source Files\Mapping Core</Filter>
     </ClCompile>
     <ClCompile Include="src\MappingCore\StringTableNode.cpp">
-      <Filter>Source Files\Mappung Core</Filter>
+      <Filter>Source Files\Mapping Core</Filter>
     </ClCompile>
     <ClCompile Include="src\MappingCore\StringUsage.cpp">
-      <Filter>Source Files\Mappung Core</Filter>
+      <Filter>Source Files\Mapping Core</Filter>
     </ClCompile>
     <ClCompile Include="src\MappingCore\SubStringMap.cpp">
-      <Filter>Source Files\Mappung Core</Filter>
+      <Filter>Source Files\Mapping Core</Filter>
     </ClCompile>
     <ClCompile Include="src\MappingCore\TemporaryFile.cpp">
-      <Filter>Source Files\Mappung Core</Filter>
+      <Filter>Source Files\Mapping Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DeathCounter.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

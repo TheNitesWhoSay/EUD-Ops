@@ -7,14 +7,17 @@ class EudOpDef;
 enum class InputSet : u32 {
     None,
     Constant,
-    DeathCounter
+    DeathCounter,
+    Memory
 };
 
 enum class EudOp : u32 {
     Null,
     SetToConstant,
     SetToDeaths,
+    SetToMemory,
     CopyToDeaths,
+    CopyToMemory,
     CheckEqual,
     CheckAtLeast,
     CheckAtMost,

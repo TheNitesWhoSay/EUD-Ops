@@ -27,7 +27,13 @@ class AddressInput : public ClassWindow
         TextControl constantText;
         EditControl constantInput;
 
+        TextControl memoryText;
+        EditControl memoryInput;
+
         ButtonControl buttonCalculate;
+
+        CheckBoxControl checkDestroySource;
+        CheckBoxControl checkUseAddressesForMemory;
 
         AddressInput();
         bool CreateThis(HWND hParent, int x, int y, int width, int height);
@@ -49,8 +55,10 @@ class AddressInput : public ClassWindow
         void HideAllInputs();
         void HideDeathInput();
         void HideConstantInput();
+        void HideMemoryInput();
         void ShowDeathInput();
         void ShowConstantInput();
+        void ShowMemoryInput();
 
     private:
 
